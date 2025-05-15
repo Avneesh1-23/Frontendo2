@@ -1,0 +1,105 @@
+.user-management-container {
+  margin-top: 20px;
+}
+
+.add-user-form {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+input {
+  padding: 8px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  flex: 1;
+}
+
+button {
+  padding: 8px 15px;
+  cursor: pointer;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 3px;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+li {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 15px;
+  margin-bottom: 10px;
+  background-color: white;
+  border-radius: 5px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.user-info {
+  flex: 1;
+}
+
+.user-name {
+  font-weight: bold;
+  font-size: 1.1em;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.user-assignments {
+  margin-top: 10px;
+}
+
+.assignment-tag {
+  display: inline-block;
+  padding: 5px 10px;
+  margin: 5px;
+  background-color: #e9ecef;
+  border-radius: 15px;
+  font-size: 0.9em;
+}
+
+.remove-assignment {
+  margin-left: 5px;
+  padding: 0 5px;
+  background: none;
+  border: none;
+  color: #dc3545;
+  cursor: pointer;
+}
+
+.remove-assignment:hover {
+  background: none;
+  color: #bd2130;
+}
+
+.no-assignments {
+  color: #6c757d;
+  font-style: italic;
+}
+
+.assignment-controls {
+  margin-left: 20px;
+}
+
+select {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  min-width: 200px;
+}
+
+select:focus {
+  outline: none;
+  border-color: #007bff;
+} 
