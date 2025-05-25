@@ -2,6 +2,27 @@
   margin-top: 20px;
 }
 
+.user-management-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.back-button {
+  padding: 8px 15px;
+  background-color: var(--button-bg);
+  color: var(--text-color);
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.back-button:hover {
+  background-color: var(--button-hover);
+}
+
 .add-user-form {
   display: flex;
   gap: 10px;
@@ -11,22 +32,24 @@
 input {
   padding: 8px;
   font-size: 16px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-color);
   border-radius: 3px;
   flex: 1;
+  background-color: var(--card-bg);
+  color: var(--text-color);
 }
 
 button {
   padding: 8px 15px;
   cursor: pointer;
-  background-color: #007bff;
-  color: white;
+  background-color: var(--button-bg);
+  color: var(--text-color);
   border: none;
   border-radius: 3px;
 }
 
 button:hover {
-  background-color: #0056b3;
+  background-color: var(--button-hover);
 }
 
 ul {
@@ -40,7 +63,7 @@ li {
   align-items: flex-start;
   padding: 15px;
   margin-bottom: 10px;
-  background-color: white;
+  background-color: var(--card-bg);
   border-radius: 5px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
@@ -54,6 +77,7 @@ li {
   font-size: 1.1em;
   margin-bottom: 10px;
   display: block;
+  color: var(--text-color);
 }
 
 .user-assignments {
@@ -64,7 +88,8 @@ li {
   display: inline-block;
   padding: 5px 10px;
   margin: 5px;
-  background-color: #e9ecef;
+  background-color: var(--button-bg);
+  color: var(--text-color);
   border-radius: 15px;
   font-size: 0.9em;
 }
@@ -84,7 +109,8 @@ li {
 }
 
 .no-assignments {
-  color: #6c757d;
+  color: var(--text-color);
+  opacity: 0.7;
   font-style: italic;
 }
 
@@ -94,12 +120,79 @@ li {
 
 select {
   padding: 8px;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-color);
   border-radius: 3px;
   min-width: 200px;
+  background-color: var(--card-bg);
+  color: var(--text-color);
 }
 
 select:focus {
   outline: none;
-  border-color: #007bff;
+  border-color: var(--button-bg);
+}
+
+.role-management {
+  margin-top: 30px;
+  padding: 20px;
+  background-color: var(--card-bg);
+  border-radius: 8px;
+}
+
+.app-roles {
+  margin-bottom: 20px;
+  padding: 15px;
+  background-color: var(--bg-color);
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.app-roles h5 {
+  margin: 0 0 10px 0;
+  color: var(--text-color);
+}
+
+.add-role-form {
+  margin-bottom: 10px;
+}
+
+.add-role-form input {
+  width: 200px;
+  margin-right: 10px;
+}
+
+.role-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.role-tag {
+  background-color: var(--button-bg);
+  color: var(--text-color);
+  padding: 4px 12px;
+  border-radius: 15px;
+  font-size: 0.9em;
+}
+
+.success-message {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
+
+.error {
+  background-color: #ffebee;
+  color: #c62828;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
+
+.loading {
+  text-align: center;
+  padding: 20px;
+  color: var(--text-color);
 } 

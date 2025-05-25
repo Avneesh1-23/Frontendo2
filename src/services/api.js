@@ -100,7 +100,31 @@ const api = {
   getAuditLogs: async (filters = {}) => {
     const response = await axios.get(`${API_BASE_URL}/audit-logs`, { params: filters });
     return response.data;
-  }
+  },
+
+  // App Admin specific endpoints
+  getAppAdminApplications: async () => {
+    const response = await axios.get(`${API_BASE_URL}/app-admin/applications`);
+    return response.data;
+  },
+
+  assignAppAdmin: async (userId, appId) => {
+    const response = await axios.post(`${API_BASE_URL}/app-admin/assignments`, {
+      user_id: userId,
+      app_id: appId
+    });
+    return response.data;
+  },
+
+  removeAppAdmin: async (userId, appId) => {
+    const response = await axios.delete(`${API_BASE_URL}/app-admin/assignments/${userId}/${appId}`);
+    return response.data;
+  },
+
+  getAppAdminUsers: async (appId) => {
+    const response = await axios.get(`${API_BASE_URL}/app-admin/applications/${appId}/users`);
+    return response.data;
+  },
 };
 
 // Add request interceptor for authentication

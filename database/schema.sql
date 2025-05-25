@@ -8,7 +8,7 @@ CREATE TABLE users (
     username VARCHAR(50) UNIQUE NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    user_type ENUM('super', 'admin', 'end') NOT NULL,
+    user_type ENUM('super', 'admin', 'app_admin', 'end') NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -94,12 +94,25 @@ CREATE TABLE secret_access (
     FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE SET NULL
 );
 
+-- App Admin Assignments table
+CREATE TABLE app_admin_assignments (
+    assignment_id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT,
+    app_id INT,
+    assigned_by INT,
+    assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (app_id) REFERENCES applications(app_id) ON DELETE CASCADE,
+    FOREIGN KEY (assigned_by) REFERENCES users(user_id)
+);
+
 -- Insert sample data
 
 -- Sample Users
 INSERT INTO users (username, email, password_hash, user_type) VALUES
 ('superadmin', 'super@example.com', 'hashed_password_1', 'super'),
 ('admin1', 'admin1@example.com', 'hashed_password_2', 'admin'),
+('appadmin1', 'appadmin1@example.com', 'hashed_password_4', 'app_admin'),
 ('enduser1', 'enduser1@example.com', 'hashed_password_3', 'end');
 
 -- Sample Roles
