@@ -19,7 +19,7 @@ function Dashboard({ userType, onLogout, theme, onThemeToggle }) {
           >
             {theme === 'light' ? '🌙' : '☀️'}
           </button>
-          <button className="back-button" onClick={onLogout}>Back to Main Page</button>
+          <button className="back-button" onClick={onLogout}>Sign Out</button>
         </div>
       </div>
       {userType === 'super' && (

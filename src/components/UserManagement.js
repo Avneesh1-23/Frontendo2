@@ -16,15 +16,37 @@ function UserManagement({ isAppAdmin, onLogout }) {
 
   const fetchData = async () => {
     try {
-      const [usersData, appsData] = await Promise.all([
-        api.getUsers(),
-        isAppAdmin ? api.getAppAdminApplications() : api.getApplications()
-      ]);
-      setUsers(usersData);
+      setLoading(true);
+      setError(null);
+      
+      // Fetch users data
+      const usersData = await api.getUsers();
+      
+      // Fetch applications data based on user type
+      let appsData = [];
+      if (isAppAdmin) {
+        try {
+          appsData = await api.getAppAdminApplications();
+        } catch (appError) {
+          console.error('Error fetching app admin applications:', appError);
+          // Don't set error here, just log it and continue with empty apps
+        }
+      } else {
+        appsData = await api.getApplications();
+      }
+
+      // Process and combine the data
+      const processedUsers = usersData.map(user => ({
+        ...user,
+        assignedApps: user.assignedApps || []
+      }));
+
+      setUsers(processedUsers);
       setApplications(appsData);
       setLoading(false);
     } catch (err) {
-      setError('Failed to fetch data');
+      console.error('Error in fetchData:', err);
+      setError('Failed to fetch data. Please try again later.');
       setLoading(false);
     }
   };
@@ -110,7 +132,7 @@ function UserManagement({ isAppAdmin, onLogout }) {
     <div className="user-management-container">
       <div className="user-management-header">
         <h3>User Management</h3>
-        <button className="back-button" onClick={onLogout}>Back to Main Page</button>
+        <button className="back-button" onClick={onLogout}>Sign Out</button>
       </div>
       {success && <div className="success-message">{success}</div>}
       
@@ -132,17 +154,21 @@ function UserManagement({ isAppAdmin, onLogout }) {
               <div className="user-assignments">
                 <strong>Assigned Applications:</strong>
                 {user.assignedApps?.length > 0 ? (
-                  user.assignedApps.map((assignment, index) => (
-                    <div key={index} className="assignment-tag">
-                      {assignment.appName} ({assignment.role})
-                      <button 
-                        className="remove-assignment"
-                        onClick={() => handleRemoveAssignment(user.id, assignment.appId)}
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))
+                  <div className="assignments-list">
+                    {user.assignedApps.map((assignment, index) => (
+                      <div key={index} className="assignment-tag">
+                        <span className="app-name">{assignment.appName || 'Unknown App'}</span>
+                        <span className="role-name">({assignment.role || 'No Role'})</span>
+                        <button 
+                          className="remove-assignment"
+                          onClick={() => handleRemoveAssignment(user.id, assignment.appId)}
+                          title="Remove Assignment"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
                 ) : (
                   <span className="no-assignments">No applications assigned</span>
                 )}
