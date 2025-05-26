@@ -218,4 +218,129 @@ select:focus {
   text-align: center;
   padding: 20px;
   color: var(--text-color);
+}
+
+.new-users-list {
+  margin: 20px 0;
+  padding: 20px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.new-users-list h4 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 1.2em;
+}
+
+.new-users-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.new-users-list li {
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.new-users-list li:last-child {
+  border-bottom: none;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.user-name {
+  font-weight: bold;
+  color: #333;
+}
+
+.user-email {
+  color: #666;
+  font-size: 0.9em;
+}
+
+.user-assignments {
+  margin-top: 10px;
+}
+
+.assignments-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 5px;
+}
+
+.assignment-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  background: #f0f0f0;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+.app-name {
+  color: #2c3e50;
+}
+
+.role-name {
+  color: #666;
+}
+
+.remove-assignment {
+  background: none;
+  border: none;
+  color: #e74c3c;
+  cursor: pointer;
+  padding: 0 4px;
+  font-size: 1.2em;
+  line-height: 1;
+}
+
+.remove-assignment:hover {
+  color: #c0392b;
+}
+
+.no-assignments {
+  color: #999;
+  font-style: italic;
+  font-size: 0.9em;
+}
+
+.assignment-form {
+  margin-top: 15px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.assignment-form select {
+  min-width: 150px;
+  padding: 6px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: var(--card-bg);
+  color: var(--text-color);
+}
+
+.assignment-form .assign-button {
+  padding: 6px 12px;
+  background-color: var(--button-bg);
+  color: var(--text-color);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.assignment-form .assign-button:hover {
+  background-color: var(--button-hover);
 } 
