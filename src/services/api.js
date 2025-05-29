@@ -108,6 +108,16 @@ const api = {
     return response.data;
   },
 
+  getAppAdmins: async () => {
+    const response = await axios.get(`${API_BASE_URL}/app-assignments/app-admins`);
+    return response.data;
+  },
+
+  createAppAdmin: async (adminData) => {
+    const response = await axios.post(`${API_BASE_URL}/app-admin/users`, adminData);
+    return response.data;
+  },
+
   assignAppAdmin: async (userId, appId) => {
     const response = await axios.post(`${API_BASE_URL}/app-admin/assignments`, {
       user_id: userId,
@@ -123,6 +133,22 @@ const api = {
 
   getAppAdminUsers: async (appId) => {
     const response = await axios.get(`${API_BASE_URL}/app-admin/applications/${appId}/users`);
+    return response.data;
+  },
+
+  // Access Requests
+  requestAccess: async (requestData) => {
+    const response = await axios.post(`${API_BASE_URL}/access-requests`, requestData);
+    return response.data;
+  },
+
+  getAccessRequests: async () => {
+    const response = await axios.get(`${API_BASE_URL}/access-requests`);
+    return response.data;
+  },
+
+  updateAccessRequest: async (requestId, status) => {
+    const response = await axios.put(`${API_BASE_URL}/access-requests/${requestId}`, { status });
     return response.data;
   },
 };

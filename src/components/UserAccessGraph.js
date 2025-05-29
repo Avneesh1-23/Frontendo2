@@ -1,12 +1,12 @@
 import {
-    CategoryScale,
-    Chart as ChartJS,
-    Legend,
-    LinearScale,
-    LineElement,
-    PointElement,
-    Title,
-    Tooltip,
+  CategoryScale,
+  Chart as ChartJS,
+  Legend,
+  LinearScale,
+  LineElement,
+  PointElement,
+  Title,
+  Tooltip,
 } from 'chart.js';
 import React, { useEffect, useState } from 'react';
 import { Line } from 'react-chartjs-2';
@@ -51,7 +51,7 @@ function UserAccessGraph() {
       {
         label: 'Last Access Time',
         data: accessData.map(item => new Date(item.lastAccess).getTime()),
-        borderColor: 'rgb(75, 192, 192)',
+        borderColor: 'rgb(25, 108, 147)',
         backgroundColor: 'rgba(75, 192, 192, 0.5)',
         tension: 0.4,
         pointRadius: 6,
@@ -107,7 +107,7 @@ function UserAccessGraph() {
           minRotation: 45
         },
         grid: {
-          color: 'rgba(128, 128, 128, 0.2)',
+          color: 'rgba(28, 33, 22, 0.12)',
         },
       },
       y: {
@@ -121,7 +121,7 @@ function UserAccessGraph() {
           },
         },
         grid: {
-          color: 'rgba(128, 128, 128, 0.2)',
+          color: 'rgba(49, 176, 79, 0.2)',
         },
       },
     },

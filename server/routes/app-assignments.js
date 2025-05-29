@@ -258,4 +258,29 @@ router.get('/application/:app_id', checkAppAccess, async (req, res) => {
   }
 });
 
+// Get all app admins with their application assignments
+router.get('/app-admins', async (req, res) => {
+  try {
+    const [appAdmins] = await pool.query(`
+      SELECT 
+        u.user_id,
+        u.username,
+        u.email,
+        a.app_id,
+        app.app_name,
+        a.assigned_at
+      FROM users u
+      JOIN app_admin_assignments a ON u.user_id = a.user_id
+      JOIN applications app ON a.app_id = app.app_id
+      WHERE u.user_type = 'app_admin'
+      ORDER BY u.username, app.app_name
+    `);
+    
+    res.json(appAdmins);
+  } catch (error) {
+    console.error('Error fetching app admins:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 module.exports = router; 

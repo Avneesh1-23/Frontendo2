@@ -19,60 +19,241 @@
 }
 
 .dashboard-container {
-  max-width: 800px;
+  padding: var(--spacing-lg);
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
-  border: 1px solid var(--border-color);
-  border-radius: 5px;
-  background-color: var(--bg-color);
-  color: var(--text-color);
 }
 
 .dashboard-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
-  background-color: var(--header-bg);
-  padding: 15px;
-  border-radius: 5px;
+  margin-bottom: var(--spacing-xl);
 }
 
 .dashboard-controls {
   display: flex;
-  gap: 10px;
-  align-items: center;
+  gap: var(--spacing-md);
 }
 
 .theme-toggle-button {
-  padding: 8px 15px;
-  background-color: var(--button-bg);
-  color: var(--text-color);
+  background: none;
   border: none;
-  border-radius: 3px;
+  font-size: var(--font-size-xl);
   cursor: pointer;
-  font-size: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
+  padding: var(--spacing-sm);
+  border-radius: var(--border-radius-md);
+  transition: all 0.3s ease;
 }
 
 .theme-toggle-button:hover {
-  background-color: var(--button-hover);
+  background-color: var(--bg-tertiary);
 }
 
 .back-button {
-  padding: 8px 15px;
-  background-color: var(--button-bg);
-  color: var(--text-color);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--button-primary);
+  color: white;
   border: none;
-  border-radius: 3px;
+  border-radius: var(--border-radius-md);
   cursor: pointer;
-  font-size: 14px;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  transition: all 0.3s ease;
 }
 
 .back-button:hover {
-  background-color: var(--button-hover);
+  background: var(--button-hover);
+}
+
+/* Access Request Section */
+.access-request-section {
+  background-color: var(--card-bg);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+  box-shadow: var(--card-shadow);
+}
+
+.access-request-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+}
+
+.access-request-header h3 {
+  margin: 0;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.access-request-form {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: center;
+}
+
+.app-select {
+  flex: 1;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family-base);
+  min-width: 200px;
+  transition: all 0.3s ease;
+}
+
+.access-reason-input {
+  flex: 2;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family-base);
+  transition: all 0.3s ease;
+}
+
+.app-select:focus,
+.access-reason-input:focus {
+  outline: none;
+  border-color: var(--button-primary);
+  box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.15);
+}
+
+.request-button {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background: var(--button-primary);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.request-button:hover {
+  background: var(--button-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--hover-shadow);
+}
+
+.error-message,
+.success-message {
+  font-size: var(--font-size-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--border-radius-md);
+  margin: 0;
+}
+
+/* Sent Requests Section */
+.sent-requests-section {
+  background-color: var(--card-bg);
+  border-radius: var(--border-radius-lg);
+  padding: var(--spacing-md);
+  margin-top: var(--spacing-lg);
+  box-shadow: var(--card-shadow);
+}
+
+.sent-requests-section h3 {
+  margin: 0 0 var(--spacing-md) 0;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+.sent-requests-section .requests-table-container {
+  overflow-x: auto;
+}
+
+.sent-requests-section table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;
+}
+
+.sent-requests-section th,
+.sent-requests-section td {
+  padding: var(--spacing-sm) var(--spacing-md);
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.sent-requests-section th {
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-secondary);
+  background-color: var(--bg-secondary);
+}
+
+.sent-requests-section .status-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.9em;
+  font-weight: 500;
+}
+
+.sent-requests-section .status-badge.pending {
+  background-color: rgba(255, 159, 64, 0.2);
+  color: rgb(255, 159, 64);
+}
+
+.sent-requests-section .status-badge.approved {
+  background-color: rgba(75, 192, 192, 0.2);
+  color: rgb(75, 192, 192);
+}
+
+.sent-requests-section .status-badge.denied {
+  background-color: rgba(255, 99, 132, 0.2);
+  color: rgb(255, 99, 132);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: var(--spacing-md);
+  }
+
+  .dashboard-header {
+    flex-direction: column;
+    gap: var(--spacing-md);
+    text-align: center;
+  }
+
+  .dashboard-controls {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .access-request-section {
+    padding: var(--spacing-md);
+  }
+
+  .access-request-form {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+
+  .app-select,
+  .access-reason-input,
+  .request-button {
+    width: 100%;
+  }
+
+  .sent-requests-section {
+    padding: var(--spacing-sm);
+  }
+  
+  .sent-requests-section th,
+  .sent-requests-section td {
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
 } 

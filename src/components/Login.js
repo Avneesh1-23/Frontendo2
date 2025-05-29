@@ -129,31 +129,6 @@ function Login({ onLogin, theme, onThemeToggle }) {
             </button>
           </div>
         </form>
-
-        <div className="login-help">
-          <div className="help-header">
-            <span className="help-icon">💡</span>
-            Available usernames:
-          </div>
-          <ul className="username-list">
-            <li>
-              <span className="role-icon">👑</span>
-              super - Super User Dashboard
-            </li>
-            <li>
-              <span className="role-icon">⚡</span>
-              admin - Admin Dashboard
-            </li>
-            <li>
-              <span className="role-icon">🔧</span>
-              appadmin - App Admin Dashboard
-            </li>
-            <li>
-              <span className="role-icon">👥</span>
-              enduser - End User Dashboard
-            </li>
-          </ul>
-        </div>
       </div>
     </div>
   );

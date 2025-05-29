@@ -4,10 +4,12 @@ import '../styles/UserManagement.css';
 
 function UserManagement({ isAppAdmin, onLogout }) {
   const [users, setUsers] = useState([]);
-  const [newUser, setNewUser] = useState('');
-  const [newUserEmail, setNewUserEmail] = useState('');
-  const [selectedApp, setSelectedApp] = useState('');
-  const [selectedRole, setSelectedRole] = useState('');
+  const [newUser, setNewUser] = useState({
+    username: '',
+    email: '',
+    selectedApp: '',
+    selectedRole: ''
+  });
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -28,11 +30,7 @@ function UserManagement({ isAppAdmin, onLogout }) {
       // Fetch applications data based on user type
       let appsData = [];
       if (isAppAdmin) {
-        try {
-          appsData = await api.getAppAdminApplications();
-        } catch (appError) {
-          console.error('Error fetching app admin applications:', appError);
-        }
+        appsData = await api.getAppAdminApplications();
       } else {
         appsData = await api.getApplications();
       }
@@ -54,55 +52,58 @@ function UserManagement({ isAppAdmin, onLogout }) {
   };
 
   const handleAddUser = async () => {
-    if (newUser.trim() && newUserEmail.trim()) {
-      try {
-        // First create the user
-        const response = await api.createUser({
-          username: newUser,
-          email: newUserEmail,
-          password_hash: 'defaultPassword123',
-          user_type: 'end'
-        });
-
-        // If app admin and application is selected, assign the user to the application
-        if (isAppAdmin && selectedApp && selectedRole) {
-          await api.assignUserToApplication(response.user_id, selectedApp, selectedRole);
-        }
-
-        // Add the new user to the users list immediately
-        const newUserObj = {
-          user_id: response.user_id,
-          username: newUser,
-          email: newUserEmail,
-          user_type: 'end',
-          assignedApps: []
-        };
-
-        if (isAppAdmin && selectedApp && selectedRole) {
-          const selectedAppData = applications.find(app => app.id === selectedApp);
-          newUserObj.assignedApps.push({
-            appId: selectedApp,
-            appName: selectedAppData?.app_name || 'Unknown App',
-            role: selectedRole
-          });
-        }
-
-        setUsers(prevUsers => [...prevUsers, newUserObj]);
-        
-        // Clear the form
-        setNewUser('');
-        setNewUserEmail('');
-        setSelectedApp('');
-        setSelectedRole('');
-        
-        setSuccess('User added successfully');
-        setTimeout(() => setSuccess(null), 3000);
-      } catch (err) {
-        console.error('Error creating user:', err);
-        setError('Failed to add user: ' + (err.response?.data?.message || err.message));
-      }
-    } else {
+    if (!newUser.username.trim() || !newUser.email.trim()) {
       setError('Please provide both username and email');
+      return;
+    }
+
+    try {
+      // Create the user
+      const response = await api.createUser({
+        username: newUser.username,
+        email: newUser.email,
+        password_hash: 'defaultPassword123',
+        user_type: 'end'
+      });
+
+      // If app admin and application is selected, assign the user to the application
+      if (isAppAdmin && newUser.selectedApp && newUser.selectedRole) {
+        await api.assignUserToApplication(response.user_id, newUser.selectedApp, newUser.selectedRole);
+      }
+
+      // Add the new user to the users list
+      const newUserObj = {
+        user_id: response.user_id,
+        username: newUser.username,
+        email: newUser.email,
+        user_type: 'end',
+        assignedApps: []
+      };
+
+      if (isAppAdmin && newUser.selectedApp && newUser.selectedRole) {
+        const selectedAppData = applications.find(app => app.app_id === newUser.selectedApp);
+        newUserObj.assignedApps.push({
+          appId: newUser.selectedApp,
+          appName: selectedAppData?.app_name || 'Unknown App',
+          role: newUser.selectedRole
+        });
+      }
+
+      setUsers(prevUsers => [...prevUsers, newUserObj]);
+      
+      // Clear the form
+      setNewUser({
+        username: '',
+        email: '',
+        selectedApp: '',
+        selectedRole: ''
+      });
+      
+      setSuccess('User added successfully');
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      console.error('Error creating user:', err);
+      setError('Failed to add user: ' + (err.response?.data?.message || err.message));
     }
   };
 
@@ -110,7 +111,7 @@ function UserManagement({ isAppAdmin, onLogout }) {
     try {
       await api.assignUserToApplication(userId, appId, role);
       const updatedUsers = users.map(user => 
-        user.id === userId 
+        user.user_id === userId 
           ? { 
               ...user, 
               assignedApps: [...user.assignedApps, { appId, role }] 
@@ -129,7 +130,7 @@ function UserManagement({ isAppAdmin, onLogout }) {
     try {
       await api.removeUserFromApplication(userId, appId);
       const updatedUsers = users.map(user =>
-        user.id === userId
+        user.user_id === userId
           ? {
               ...user,
               assignedApps: user.assignedApps.filter(app => app.appId !== appId)
@@ -151,7 +152,7 @@ function UserManagement({ isAppAdmin, onLogout }) {
         role_name: roleName
       });
       const updatedApps = applications.map(app =>
-        app.id === appId
+        app.app_id === appId
           ? { ...app, roles: [...app.roles, roleName] }
           : app
       );
@@ -170,7 +171,6 @@ function UserManagement({ isAppAdmin, onLogout }) {
     <div className="user-management-container">
       <div className="user-management-header">
         <h3>User Management</h3>
-        <button className="back-button" onClick={onLogout}>Sign Out</button>
       </div>
       {success && <div className="success-message">{success}</div>}
       {error && <div className="error-message">{error}</div>}
@@ -178,42 +178,44 @@ function UserManagement({ isAppAdmin, onLogout }) {
       <div className="add-user-form">
         <input
           type="text"
-          value={newUser}
-          onChange={(e) => setNewUser(e.target.value)}
+          value={newUser.username}
+          onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
           placeholder="Enter new user name"
         />
         <input
           type="email"
-          value={newUserEmail}
-          onChange={(e) => setNewUserEmail(e.target.value)}
+          value={newUser.email}
+          onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
           placeholder="Enter user email"
         />
         {isAppAdmin && (
           <>
             <select
-              value={selectedApp}
-              onChange={(e) => setSelectedApp(e.target.value)}
+              value={newUser.selectedApp}
+              onChange={(e) => setNewUser({ ...newUser, selectedApp: e.target.value, selectedRole: '' })}
             >
               <option value="">Select Application</option>
               {applications.map(app => (
-                <option key={app.id} value={app.id}>
+                <option key={app.app_id} value={app.app_id}>
                   {app.app_name}
                 </option>
               ))}
             </select>
-            <select
-              value={selectedRole}
-              onChange={(e) => setSelectedRole(e.target.value)}
-            >
-              <option value="">Select Role</option>
-              {selectedApp && applications
-                .find(app => app.id === selectedApp)?.roles
-                .map(role => (
-                  <option key={role} value={role}>
-                    {role}
-                  </option>
-                ))}
-            </select>
+            {newUser.selectedApp && (
+              <select
+                value={newUser.selectedRole}
+                onChange={(e) => setNewUser({ ...newUser, selectedRole: e.target.value })}
+              >
+                <option value="">Select Role</option>
+                {applications
+                  .find(app => app.app_id === newUser.selectedApp)?.roles
+                  .map(role => (
+                    <option key={role} value={role}>
+                      {role}
+                    </option>
+                  ))}
+              </select>
+            )}
           </>
         )}
         <button onClick={handleAddUser}>
@@ -269,9 +271,9 @@ function UserManagement({ isAppAdmin, onLogout }) {
                       >
                         <option value="">Select Application</option>
                         {applications
-                          .filter(app => !user.assignedApps?.some(a => a.appId === app.id))
+                          .filter(app => !user.assignedApps?.some(a => a.appId === app.app_id))
                           .map(app => (
-                            <option key={app.id} value={app.id}>
+                            <option key={app.app_id} value={app.app_id}>
                               {app.app_name}
                             </option>
                           ))}
@@ -290,7 +292,7 @@ function UserManagement({ isAppAdmin, onLogout }) {
                         >
                           <option value="">Select Role</option>
                           {applications
-                            .find(app => app.id === user.selectedApp)?.roles
+                            .find(app => app.app_id === user.selectedApp)?.roles
                             .map(role => (
                               <option key={role} value={role}>
                                 {role}
@@ -316,7 +318,7 @@ function UserManagement({ isAppAdmin, onLogout }) {
           <div className="role-management">
             <h4>Manage Roles</h4>
             {applications.map(app => (
-              <div key={app.id} className="app-roles">
+              <div key={app.app_id} className="app-roles">
                 <h5>{app.app_name}</h5>
                 <div className="add-role-form">
                   <input
@@ -324,7 +326,7 @@ function UserManagement({ isAppAdmin, onLogout }) {
                     placeholder="New role name"
                     onKeyPress={(e) => {
                       if (e.key === 'Enter') {
-                        handleAddRole(app.id, e.target.value);
+                        handleAddRole(app.app_id, e.target.value);
                         e.target.value = '';
                       }
                     }}

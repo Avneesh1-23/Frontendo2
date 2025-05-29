@@ -3,21 +3,35 @@ import { api } from '../services/api';
 import '../styles/ApplicationList.css';
 import AppManagementModal from './AppManagementModal';
 
+// GitHub logo SVG component
+const GitHubLogo = () => (
+  <svg height="24" viewBox="0 0 16 16" width="24" fill="currentColor">
+    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+  </svg>
+);
+
 function ApplicationList({ userType }) {
   const [applications, setApplications] = useState([]);
   const [newApp, setNewApp] = useState({ name: '', url: '', roles: '' });
-  const [newRole, setNewRole] = useState({ appId: '', roleName: '' });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [selectedApp, setSelectedApp] = useState(null);
-  const [showAccessRequestModal, setShowAccessRequestModal] = useState(false);
-  const [selectedRestrictedApp, setSelectedRestrictedApp] = useState(null);
-  const [accessRequestReason, setAccessRequestReason] = useState('');
+  const [restrictedApps, setRestrictedApps] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredApplications, setFilteredApplications] = useState([]);
 
   useEffect(() => {
     fetchApplications();
   }, []);
+
+  useEffect(() => {
+    const lowerCaseQuery = searchQuery.toLowerCase();
+    const filtered = applications.filter(app =>
+      app.app_name.toLowerCase().includes(lowerCaseQuery)
+    );
+    setFilteredApplications(filtered);
+  }, [applications, searchQuery]);
 
   const fetchApplications = async () => {
     try {
@@ -25,6 +39,18 @@ function ApplicationList({ userType }) {
       const data = await api.getApplications();
       console.log('Received applications:', data);
       setApplications(data);
+
+      // Set restricted apps for end users
+      if (userType === 'end') {
+        const restricted = data.filter(app => {
+          const appName = app.app_name.toLowerCase();
+          return appName.includes('hr') || 
+                 appName.includes('devops') || 
+                 appName.includes('finance');
+        });
+        setRestrictedApps(restricted.map(app => app.app_id));
+      }
+
       setLoading(false);
     } catch (err) {
       console.error('Error fetching applications:', err);
@@ -57,29 +83,6 @@ function ApplicationList({ userType }) {
     }
   };
 
-  const handleAddRole = async (appId, roleName) => {
-    if (!appId || !roleName) {
-      setError('Please select an application and enter a role name');
-      return;
-    }
-
-    try {
-      // This would be an API call to add a role
-      const updatedApplications = applications.map(app => 
-        app.app_id === parseInt(appId)
-          ? { ...app, roles: [...(app.roles || []), roleName] }
-          : app
-      );
-      setApplications(updatedApplications);
-      setNewRole({ appId: '', roleName: '' });
-      setSuccess('Role added successfully');
-      setTimeout(() => setSuccess(null), 3000);
-    } catch (err) {
-      console.error('Error adding role:', err);
-      setError(`Failed to add role: ${err.message}`);
-    }
-  };
-  
   const handleRemoveRole = async (appId, roleToRemove) => {
     try {
       // This would be an API call to remove a role
@@ -98,21 +101,22 @@ function ApplicationList({ userType }) {
   };
 
   const handleAccessApp = async (app) => {
+    if (userType === 'end' && restrictedApps.includes(app.app_id)) {
+      setError(
+        <div className="access-denied-message">
+          <span>Access denied. Please request access to this application.</span>
+          <button 
+            className="back-to-apps-button"
+            onClick={() => setError(null)}
+          >
+            Back to Applications
+          </button>
+        </div>
+      );
+      return;
+    }
+
     try {
-      // Check if user is end user and trying to access restricted apps
-      if (userType === 'end') {
-        const restrictedApps = ['hr', 'devops', 'finance'];
-        const isRestricted = restrictedApps.some(restricted => 
-          app.app_name.toLowerCase().includes(restricted)
-        );
-
-        if (isRestricted) {
-          setSelectedRestrictedApp(app);
-          setShowAccessRequestModal(true);
-          return;
-        }
-      }
-
       // Check if this is the Github App (by name or URL)
       if (app.app_name.toLowerCase().includes('github') || app.app_url.includes('github.com')) {
         try {
@@ -127,25 +131,6 @@ function ApplicationList({ userType }) {
       window.open(formattedUrl, '_blank', 'noopener,noreferrer');
     } catch (err) {
       setError(`Failed to access application: ${err.message}`);
-    }
-  };
-
-  const handleRequestAccess = async () => {
-    if (!accessRequestReason.trim()) {
-      setError('Please provide a reason for access request');
-      return;
-    }
-
-    try {
-      // Here you would typically make an API call to send the access request
-      // For now, we'll just show a success message
-      setSuccess('Access request sent successfully. You will be notified once approved.');
-      setShowAccessRequestModal(false);
-      setSelectedRestrictedApp(null);
-      setAccessRequestReason('');
-      setTimeout(() => setSuccess(null), 3000);
-    } catch (err) {
-      setError('Failed to send access request. Please try again.');
     }
   };
 
@@ -220,16 +205,43 @@ function ApplicationList({ userType }) {
     }
   };
 
+  const getAppIcon = (appName) => {
+    const name = appName.toLowerCase();
+    if (name.includes('github')) return <GitHubLogo />;
+    if (name.includes('jira')) return '🎯';
+    if (name.includes('slack')) return '💬';
+    if (name.includes('confluence')) return '📚';
+    if (name.includes('jenkins')) return '⚙️';
+    if (name.includes('aws')) return '☁️';
+    if (name.includes('azure')) return '🌩️';
+    if (name.includes('gcp')) return '☁️';
+    if (name.includes('docker')) return '🐳';
+    if (name.includes('kubernetes')) return '⚓';
+    if (name.includes('gitlab')) return '🦊';
+    if (name.includes('bitbucket')) return '🐙';
+    if (name.includes('trello')) return '📋';
+    if (name.includes('figma')) return '🎨';
+    if (name.includes('zoom')) return '🎥';
+    if (name.includes('teams')) return '👥';
+    if (name.includes('hr')) return '👥';
+    if (name.includes('finance')) return '💰';
+    if (name.includes('devops')) return '🛠️';
+    return '🔗'; // Default icon
+  };
+
   if (loading) return <div className="loading">Loading applications...</div>;
   if (error) return <div className="error">{error}</div>;
 
   return (
     <div className="application-list-container">
-      <h3>Applications</h3>
-      
+      {/* Header section with title */}
+      <div className="application-header-controls">
+        <h3>Applications</h3>
+      </div>
+
       {success && <div className="success-message">{success}</div>}
       {error && <div className="error-message">{error}</div>}
-      
+
       {userType === 'admin' && (
         <div className="admin-controls">
           <div className="add-application-form">
@@ -248,90 +260,133 @@ function ApplicationList({ userType }) {
             />
             <button onClick={handleAddApplication}>Add Application</button>
           </div>
-        </div>
-      )}
 
-      {userType === 'app_admin' && (
-        <div className="app-admin-controls">
-          <div className="add-role-form">
-            <h4>Add New Role</h4>
-            <select
-              value={newRole.appId}
-              onChange={(e) => setNewRole({ ...newRole, appId: e.target.value })}
-            >
-              <option value="">Select Application</option>
-              {applications.map(app => (
-                <option key={app.app_id} value={app.app_id}>{app.app_name}</option>
-              ))}
-            </select>
+          {/* Admin search bar above the table */}
+          <div className="application-search-container admin-search-container">
             <input
               type="text"
-              value={newRole.roleName}
-              onChange={(e) => setNewRole({ ...newRole, roleName: e.target.value })}
-              placeholder="Role Name"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search applications..."
+              className="application-search-input admin-search-input"
             />
-            <button onClick={() => handleAddRole(newRole.appId, newRole.roleName)}>Add Role</button>
+          </div>
+
+          {/* Applications list as a table for admin */}
+          <div className="applications-table-container">
+            <table className="applications-table">
+              <thead>
+                <tr>
+                  <th></th> {/* Icon column */}
+                  <th>Application Name</th>
+                  <th>Access</th>
+                  <th>Manage</th>
+                  <th>Delete</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredApplications.map((app) => (
+                  <tr key={app.app_id}>
+                    <td>
+                      <span className="app-icon table-icon">{getAppIcon(app.app_name)}</span>
+                    </td>
+                    <td>
+                      <span className="app-name">{app.app_name}</span>
+                    </td>
+                    <td>
+                      <button 
+                        className={`access-button ${userType === 'end' && restrictedApps.includes(app.app_id) ? 'restricted' : ''}`}
+                        onClick={() => handleAccessApp(app)}
+                      >
+                        {userType === 'end' && restrictedApps.includes(app.app_id) ? 'No Access' : 'Access'}
+                      </button>
+                    </td>
+                    <td>
+                      <button 
+                        className="manage-button" 
+                        onClick={() => handleManageApp(app)}
+                      >
+                        Manage
+                      </button>
+                    </td>
+                    <td>
+                      <button 
+                        className="delete-button" 
+                        onClick={() => handleDeleteApplication(app.app_id)}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
 
+      {userType !== 'admin' && (
+        <ul className="applications-list">
+          {filteredApplications.map((app) => (
+            <li key={app.app_id} className="application-item">
+              <div className="app-info">
+                <div className="app-header">
+                  <span className="app-icon">{getAppIcon(app.app_name)}</span>
+                  <span className="app-name">{app.app_name}</span>
+                </div>
+                {userType === 'app_admin' && (
+                  <div className="app-roles">
+                    <strong>Roles:</strong>
+                    {(app.roles || []).map((role, index) => (
+                      <span key={index} className="role-tag">
+                        {role}
+                        <button 
+                          className="remove-role"
+                          onClick={() => handleRemoveRole(app.app_id, role)}
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="app-actions">
+                <button 
+                  className={`access-button ${userType === 'end' && restrictedApps.includes(app.app_id) ? 'restricted' : ''}`}
+                  onClick={() => handleAccessApp(app)}
+                >
+                  {userType === 'end' && restrictedApps.includes(app.app_id) ? 'No Access' : 'Access'}
+                </button>
+                {(userType === 'admin' || userType === 'app_admin') && (
+                  <button 
+                    className="manage-button" 
+                    onClick={() => handleManageApp(app)}
+                  >
+                    Manage
+                  </button>
+                )}
+                {userType === 'admin' && (
+                  <button 
+                    className="delete-button" 
+                    onClick={() => handleDeleteApplication(app.app_id)}
+                  >
+                    Delete
+                  </button>
+                )}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+
       {userType === 'app_admin' && (
-        <div className="app-admin-user-management-note">
+        <div className="app-admin-info">
           <p>
             As an App Admin, you can assign users to your applications and manage their roles.
           </p>
         </div>
       )}
-
-      <ul className="applications-list">
-        {applications.map((app) => (
-          <li key={app.app_id} className="application-item">
-            <div className="app-info">
-              <span className="app-name">{app.app_name}</span>
-              {userType === 'app_admin' && (
-                <div className="app-roles">
-                  <strong>Roles:</strong>
-                  {(app.roles || []).map((role, index) => (
-                    <span key={index} className="role-tag">
-                      {role}
-                      <button 
-                        className="remove-role"
-                        onClick={() => handleRemoveRole(app.app_id, role)}
-                      >
-                        ×
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-            <div className="app-actions">
-              <button 
-                className="access-button"
-                onClick={() => handleAccessApp(app)}
-              >
-                Access
-              </button>
-              {(userType === 'admin' || userType === 'app_admin') && (
-                <button 
-                  className="manage-button" 
-                  onClick={() => handleManageApp(app)}
-                >
-                  Manage
-                </button>
-              )}
-              {userType === 'admin' && (
-                <button 
-                  className="delete-button" 
-                  onClick={() => handleDeleteApplication(app.app_id)}
-                >
-                  Delete
-                </button>
-              )}
-            </div>
-          </li>
-        ))}
-      </ul>
 
       {selectedApp && (
         <AppManagementModal
@@ -341,40 +396,6 @@ function ApplicationList({ userType }) {
           onUpdate={handleAppUpdate}
           isAdminOnly={userType === 'admin'}
         />
-      )}
-
-      {showAccessRequestModal && selectedRestrictedApp && (
-        <div className="modal-overlay">
-          <div className="modal-content access-request-modal">
-            <div className="modal-header">
-              <h3>Request Access</h3>
-              <button className="close-button" onClick={() => setShowAccessRequestModal(false)}>×</button>
-            </div>
-            <div className="modal-body">
-              <p className="access-denied-message">
-                Access to {selectedRestrictedApp.app_name} is restricted for end users.
-              </p>
-              <div className="request-form">
-                <label htmlFor="access-reason">Reason for Access Request:</label>
-                <textarea
-                  id="access-reason"
-                  value={accessRequestReason}
-                  onChange={(e) => setAccessRequestReason(e.target.value)}
-                  placeholder="Please explain why you need access to this application..."
-                  rows="4"
-                />
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button className="request-button" onClick={handleRequestAccess}>
-                Submit Request
-              </button>
-              <button className="cancel-button" onClick={() => setShowAccessRequestModal(false)}>
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
       )}
     </div>
   );

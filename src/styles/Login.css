@@ -148,8 +148,8 @@
 .submit-button {
   width: 100%;
   padding: 1rem;
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-color-dark) 100%);
-  color: #10e35a;
+  background: var(--button-primary);
+  color: white;
   border: none;
   border-radius: 8px;
   font-size: 1.1rem;
@@ -165,8 +165,9 @@
 }
 
 .submit-button:hover {
+  background: var(--button-hover);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--hover-shadow);
 }
 
 .submit-button:active {
@@ -174,9 +175,9 @@
 }
 
 .submit-button.loading {
-  background-color: var(--primary-color-light);
+  background: var(--button-primary);
   cursor: not-allowed;
-  color: #ffffff;
+  color: white;
 }
 
 .loading-spinner {
