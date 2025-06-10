@@ -7,6 +7,7 @@ function EndUserManagement() {
   const [newUser, setNewUser] = useState({
     username: '',
     email: '',
+    password: '',
     selectedApp: '',
     selectedRole: '',
     selectedOperation: ''
@@ -51,8 +52,14 @@ function EndUserManagement() {
 
   const handleAddUser = async (e) => {
     e.preventDefault();
-    if (!newUser.username || !newUser.email || !newUser.selectedApp || !newUser.selectedRole || !newUser.selectedOperation) {
-      setError('Please fill in all fields');
+    if (!newUser.username || !newUser.email || !newUser.password || !newUser.selectedApp || !newUser.selectedOperation) {
+      setError('Please fill in all required fields');
+      return;
+    }
+
+    // Validate password strength
+    if (newUser.password.length < 8) {
+      setError('Password must be at least 8 characters long');
       return;
     }
 
@@ -64,11 +71,12 @@ function EndUserManagement() {
         user_id: Date.now(), // Use timestamp as unique ID
         username: newUser.username,
         email: newUser.email,
+        password: newUser.password, // In a real app, this should be hashed
         assignments: [
           {
             app_id: selectedApp.app_id,
             app_name: selectedApp.app_name,
-            role_id: null, // Assuming role_id is not needed for dummy data
+            role_id: null,
             role_name: newUser.selectedRole,
             operation: newUser.selectedOperation
           }
@@ -84,7 +92,14 @@ function EndUserManagement() {
       localStorage.setItem('endUsers', JSON.stringify(updatedUsers));
 
       setSuccess('End user added successfully');
-      setNewUser({ username: '', email: '', selectedApp: '', selectedRole: '', selectedOperation: '' });
+      setNewUser({ 
+        username: '', 
+        email: '', 
+        password: '', 
+        selectedApp: '', 
+        selectedRole: '', 
+        selectedOperation: '' 
+      });
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       console.error('Error adding end user:', err);
@@ -147,10 +162,20 @@ function EndUserManagement() {
             />
           </div>
           <div className="form-group">
+            <input
+              type="password"
+              value={newUser.password}
+              onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+              placeholder="Password (min. 8 characters)"
+              className="input-field"
+              minLength="8"
+            />
+          </div>
+          <div className="form-group">
             <select
               value={newUser.selectedApp}
               onChange={(e) => {
-                setNewUser({ ...newUser, selectedApp: e.target.value, selectedRole: '' }); // Reset role when app changes
+                setNewUser({ ...newUser, selectedApp: e.target.value, selectedRole: '' });
               }}
               className="select-field"
             >
@@ -167,7 +192,7 @@ function EndUserManagement() {
               value={newUser.selectedRole}
               onChange={(e) => setNewUser({ ...newUser, selectedRole: e.target.value })}
               className="select-field"
-              disabled={!newUser.selectedApp} // Disable if no app is selected
+              disabled={!newUser.selectedApp}
             >
               <option value="">Select Role</option>
               {newUser.selectedApp && applications.find(app => app.app_id === parseInt(newUser.selectedApp))?.roles?.map((role, index) => (

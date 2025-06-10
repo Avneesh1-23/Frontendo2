@@ -200,19 +200,26 @@
 }
 
 .app-roles {
-  margin-top: var(--spacing-sm);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) 0;
 }
 
 .role-tag {
-  background-color: var(--bg-tertiary);
-  color: var(--text-primary);
+  display: inline-block;
+  background-color: var(--button-primary);
+  color: white;
   padding: var(--spacing-xs) var(--spacing-sm);
   border-radius: var(--border-radius-sm);
-  margin-right: var(--spacing-sm);
-  margin-bottom: var(--spacing-sm);
-  display: inline-block;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
+}
+
+.no-roles {
+  color: var(--text-secondary);
+  font-style: italic;
+  font-size: var(--font-size-sm);
 }
 
 .remove-role {
@@ -233,7 +240,8 @@
 
 .app-actions {
   display: flex;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
+  align-items: center;
 }
 
 .app-actions button {

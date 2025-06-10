@@ -18,6 +18,18 @@ function Dashboard({ userType, onLogout, theme, onThemeToggle }) {
   const [sentRequests, setSentRequests] = useState([]);
   const [accessRequests, setAccessRequests] = useState([]);
   const [applications, setApplications] = useState([]);
+  const [activeTab, setActiveTab] = useState(() => {
+    switch (userType) {
+      case 'super':
+        return 'new-application';
+      case 'admin':
+        return 'new-application';
+      case 'app_admin':
+        return 'applications';
+      default:
+        return 'applications';
+    }
+  });
 
   useEffect(() => {
     if (userType === 'end') {
@@ -103,6 +115,46 @@ function Dashboard({ userType, onLogout, theme, onThemeToggle }) {
     }
   };
 
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'applications':
+        return (
+          <ApplicationList 
+            applications={applications}
+            userType={userType}
+          />
+        );
+      case 'access-requests':
+        return (
+          <AccessRequests 
+            requests={accessRequests}
+            onHandleRequest={handleAccessRequest}
+          />
+        );
+      case 'end-users':
+        return <EndUserManagement />;
+      case 'new-application':
+        return <ApplicationList userType={userType} />;
+      case 'app-admin-management':
+        return <AppAdminManagement onLogout={onLogout} />;
+      case 'system-overview':
+        return (
+          <div className="system-overview-container">
+            <div className="overview-section">
+              <h3>User Access Graph</h3>
+              <UserAccessGraph />
+            </div>
+            <div className="overview-section">
+              <h3>Audit Log</h3>
+              <AuditLog />
+            </div>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
@@ -136,7 +188,7 @@ function Dashboard({ userType, onLogout, theme, onThemeToggle }) {
                 }}
                 className="app-select"
               >
-                <option value="">Select application...</option>
+                <option value="">Select application to request access...</option>
                 {restrictedApps.map(app => (
                   <option key={app.app_id} value={app.app_id}>
                     {app.app_name}
@@ -151,14 +203,14 @@ function Dashboard({ userType, onLogout, theme, onThemeToggle }) {
                 className="access-reason-input"
               />
               <button className="request-button" onClick={handleRequestAccess}>
-                Request
+                Request Access
               </button>
             </div>
           </div>
 
           {sentRequests.length > 0 && (
             <div className="sent-requests-section">
-              <h3>Sent Requests</h3>
+              <h3>Your Access Requests</h3>
               <div className="requests-table-container">
                 <table>
                   <thead>
@@ -192,29 +244,94 @@ function Dashboard({ userType, onLogout, theme, onThemeToggle }) {
 
       {userType === 'super' && (
         <>
-          <UserAccessGraph />
-          <AuditLog />
+          <div className="dashboard-tabs">
+            <button 
+              className={`tab-button ${activeTab === 'new-application' ? 'active' : ''}`}
+              onClick={() => setActiveTab('new-application')}
+            >
+              Add New Application
+            </button>
+            <button 
+              className={`tab-button ${activeTab === 'app-admin-management' ? 'active' : ''}`}
+              onClick={() => setActiveTab('app-admin-management')}
+            >
+              App Admin Management
+            </button>
+            <button 
+              className={`tab-button ${activeTab === 'applications' ? 'active' : ''}`}
+              onClick={() => setActiveTab('applications')}
+            >
+              Applications
+            </button>
+            <button 
+              className={`tab-button ${activeTab === 'end-users' ? 'active' : ''}`}
+              onClick={() => setActiveTab('end-users')}
+            >
+              End User Management
+            </button>
+            <button 
+              className={`tab-button ${activeTab === 'system-overview' ? 'active' : ''}`}
+              onClick={() => setActiveTab('system-overview')}
+            >
+              System Overview
+            </button>
+          </div>
+          <div className="tab-content">
+            {renderTabContent()}
+          </div>
         </>
       )}
+
       {userType === 'admin' && (
         <>
-          <ApplicationList userType={userType} />
-          <AppAdminManagement onLogout={onLogout} />
+          <div className="dashboard-tabs">
+            <button 
+              className={`tab-button ${activeTab === 'new-application' ? 'active' : ''}`}
+              onClick={() => setActiveTab('new-application')}
+            >
+              Add New Application
+            </button>
+            <button 
+              className={`tab-button ${activeTab === 'app-admin-management' ? 'active' : ''}`}
+              onClick={() => setActiveTab('app-admin-management')}
+            >
+              App Admin Management
+            </button>
+          </div>
+          <div className="tab-content">
+            {renderTabContent()}
+          </div>
         </>
       )}
+
       {userType === 'app_admin' && (
         <>
-          <AccessRequests 
-            requests={accessRequests}
-            onHandleRequest={handleAccessRequest}
-          />
-          <ApplicationList 
-            applications={applications}
-            userType={userType}
-          />
-          <EndUserManagement />
+          <div className="dashboard-tabs">
+            <button 
+              className={`tab-button ${activeTab === 'applications' ? 'active' : ''}`}
+              onClick={() => setActiveTab('applications')}
+            >
+              Applications
+            </button>
+            <button 
+              className={`tab-button ${activeTab === 'access-requests' ? 'active' : ''}`}
+              onClick={() => setActiveTab('access-requests')}
+            >
+              Access Requests
+            </button>
+            <button 
+              className={`tab-button ${activeTab === 'end-users' ? 'active' : ''}`}
+              onClick={() => setActiveTab('end-users')}
+            >
+              End Users
+            </button>
+          </div>
+          <div className="tab-content">
+            {renderTabContent()}
+          </div>
         </>
       )}
+
       {userType === 'end' && <ApplicationList userType={userType} />}
     </div>
   );

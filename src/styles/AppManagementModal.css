@@ -250,19 +250,27 @@
 
 .remove-user-button {
   padding: var(--spacing-xs) var(--spacing-sm);
-  background: var(--error-color);
+  background: var(--error-color, #dc3545);
   color: white;
   border: none;
   border-radius: var(--border-radius-sm);
   font-size: var(--font-size-sm);
   cursor: pointer;
   transition: all 0.3s ease;
+  opacity: 1;
+  font-weight: var(--font-weight-medium);
 }
 
 .remove-user-button:hover {
-  background: var(--error-color-hover);
+  background: var(--error-color-hover, #c82333);
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  opacity: 1;
+}
+
+.remove-user-button:active {
+  transform: translateY(0);
+  box-shadow: none;
 }
 
 .save-button,

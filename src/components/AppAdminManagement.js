@@ -9,31 +9,43 @@ function AppAdminManagement({ onLogout }) {
     email: '',
     selectedApps: []
   });
-  // Initialize with dummy data
-  const [appAdmins, setAppAdmins] = useState([
-    {
-      user_id: 1,
-      username: 'appadmin1',
-      email: 'appadmin1@example.com',
-      applications: [
-        { app_id: 1, app_name: 'HR Portal' },
-        { app_id: 2, app_name: 'Finance App' }
-      ],
-      created_at: '2024-03-15T10:00:00'
-    },
-    {
-      user_id: 2,
-      username: 'appadmin2',
-      email: 'appadmin2@example.com',
-      applications: [
-        { app_id: 3, app_name: 'DevOps Dashboard' }
-      ],
-      created_at: '2024-03-16T14:30:00'
+  // Initialize with data from localStorage or default data
+  const [appAdmins, setAppAdmins] = useState(() => {
+    const savedAdmins = localStorage.getItem('appAdmins');
+    if (savedAdmins) {
+      return JSON.parse(savedAdmins);
     }
-  ]);
+    // Default data if nothing in localStorage
+    return [
+      {
+        user_id: 1,
+        username: 'appadmin1',
+        email: 'appadmin1@example.com',
+        applications: [
+          { app_id: 1, app_name: 'HR Portal' },
+          { app_id: 2, app_name: 'Finance App' }
+        ],
+        created_at: '2024-03-15T10:00:00'
+      },
+      {
+        user_id: 2,
+        username: 'appadmin2',
+        email: 'appadmin2@example.com',
+        applications: [
+          { app_id: 3, app_name: 'DevOps Dashboard' }
+        ],
+        created_at: '2024-03-16T14:30:00'
+      }
+    ];
+  });
   const [loadingAppAdmins, setLoadingAppAdmins] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+
+  // Save appAdmins to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('appAdmins', JSON.stringify(appAdmins));
+  }, [appAdmins]);
 
   useEffect(() => {
     fetchApplications();
@@ -58,7 +70,7 @@ function AppAdminManagement({ onLogout }) {
     try {
       // Create new app admin object
       const newAppAdmin = {
-        user_id: appAdmins.length + 1,
+        user_id: Date.now(), // Use timestamp as unique ID
         username: newAdmin.username,
         email: newAdmin.email,
         applications: newAdmin.selectedApps.map(appId => {

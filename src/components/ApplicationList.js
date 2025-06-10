@@ -11,7 +11,11 @@ const GitHubLogo = () => (
 );
 
 function ApplicationList({ userType }) {
-  const [applications, setApplications] = useState([]);
+  const [applications, setApplications] = useState(() => {
+    // Try to load applications from localStorage first
+    const savedApplications = localStorage.getItem('applications');
+    return savedApplications ? JSON.parse(savedApplications) : [];
+  });
   const [newApp, setNewApp] = useState({ name: '', url: '', roles: '' });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -25,24 +29,48 @@ function ApplicationList({ userType }) {
     fetchApplications();
   }, []);
 
+  // Save applications to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('applications', JSON.stringify(applications));
+  }, [applications]);
+
   useEffect(() => {
     const lowerCaseQuery = searchQuery.toLowerCase();
-    const filtered = applications.filter(app =>
+    let filtered = applications;
+    
+    // For end users, filter out restricted applications from the main view
+    if (userType === 'end') {
+      filtered = applications.filter(app => !restrictedApps.includes(app.app_id));
+    }
+    
+    // Apply search filter
+    filtered = filtered.filter(app =>
       app.app_name.toLowerCase().includes(lowerCaseQuery)
     );
+    
     setFilteredApplications(filtered);
-  }, [applications, searchQuery]);
+  }, [applications, searchQuery, restrictedApps, userType]);
 
   const fetchApplications = async () => {
     try {
       console.log('Fetching applications...');
       const data = await api.getApplications();
       console.log('Received applications:', data);
-      setApplications(data);
+      
+      // Merge fetched data with existing data from localStorage
+      const mergedData = data.map(fetchedApp => {
+        const existingApp = applications.find(app => app.app_id === fetchedApp.app_id);
+        return {
+          ...fetchedApp,
+          roles: existingApp?.roles || fetchedApp.roles || []
+        };
+      });
+      
+      setApplications(mergedData);
 
       // Set restricted apps for end users
       if (userType === 'end') {
-        const restricted = data.filter(app => {
+        const restricted = mergedData.filter(app => {
           const appName = app.app_name.toLowerCase();
           return appName.includes('hr') || 
                  appName.includes('devops') || 
@@ -62,15 +90,26 @@ function ApplicationList({ userType }) {
   const handleAddApplication = async () => {
     if (newApp.name && newApp.url) {
       try {
+        // Parse roles from comma-separated string
+        const roles = newApp.roles
+          ? newApp.roles.split(',').map(role => role.trim()).filter(role => role)
+          : [];
+
         const application = {
           app_name: newApp.name,
           app_url: newApp.url,
           description: newApp.roles,
+          roles: roles,
           created_by: 2 // This should come from the logged-in user
         };
         
         const result = await api.createApplication(application);
-        setApplications([...applications, result]);
+        const newApplication = {
+          ...result,
+          roles: roles
+        };
+        
+        setApplications(prevApps => [...prevApps, newApplication]);
         setNewApp({ name: '', url: '', roles: '' });
         setSuccess('Application added successfully');
         setTimeout(() => setSuccess(null), 3000);
@@ -85,7 +124,6 @@ function ApplicationList({ userType }) {
 
   const handleRemoveRole = async (appId, roleToRemove) => {
     try {
-      // This would be an API call to remove a role
       const updatedApplications = applications.map(app =>
         app.app_id === appId
           ? { ...app, roles: (app.roles || []).filter(role => role !== roleToRemove) }
@@ -149,7 +187,8 @@ function ApplicationList({ userType }) {
         const updatedApp = {
           app_name: data.name || selectedApp.app_name,
           app_url: data.url || selectedApp.app_url,
-          description: data.description || selectedApp.description
+          description: data.description || selectedApp.description,
+          roles: selectedApp.roles // Preserve existing roles
         };
 
         await api.updateApplication(selectedApp.app_id, updatedApp);
@@ -242,7 +281,7 @@ function ApplicationList({ userType }) {
       {success && <div className="success-message">{success}</div>}
       {error && <div className="error-message">{error}</div>}
 
-      {userType === 'admin' && (
+      {(userType === 'admin' || userType === 'super') && (
         <div className="admin-controls">
           <div className="add-application-form">
             <h4>Add New Application</h4>
@@ -251,140 +290,106 @@ function ApplicationList({ userType }) {
               value={newApp.name}
               onChange={(e) => setNewApp({ ...newApp, name: e.target.value })}
               placeholder="Application Name"
+              className="app-input"
             />
             <input
               type="text"
               value={newApp.url}
               onChange={(e) => setNewApp({ ...newApp, url: e.target.value })}
-              placeholder="Application URL (e.g., app.example.com)"
+              placeholder="Application URL"
+              className="app-input"
             />
-            <button onClick={handleAddApplication}>Add Application</button>
-          </div>
-
-          {/* Admin search bar above the table */}
-          <div className="application-search-container admin-search-container">
             <input
               type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search applications..."
-              className="application-search-input admin-search-input"
+              value={newApp.roles}
+              onChange={(e) => setNewApp({ ...newApp, roles: e.target.value })}
+              placeholder="Roles (comma-separated)"
+              className="app-input"
             />
-          </div>
-
-          {/* Applications list as a table for admin */}
-          <div className="applications-table-container">
-            <table className="applications-table">
-              <thead>
-                <tr>
-                  <th></th> {/* Icon column */}
-                  <th>Application Name</th>
-                  <th>Access</th>
-                  <th>Manage</th>
-                  <th>Delete</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredApplications.map((app) => (
-                  <tr key={app.app_id}>
-                    <td>
-                      <span className="app-icon table-icon">{getAppIcon(app.app_name)}</span>
-                    </td>
-                    <td>
-                      <span className="app-name">{app.app_name}</span>
-                    </td>
-                    <td>
-                      <button 
-                        className={`access-button ${userType === 'end' && restrictedApps.includes(app.app_id) ? 'restricted' : ''}`}
-                        onClick={() => handleAccessApp(app)}
-                      >
-                        {userType === 'end' && restrictedApps.includes(app.app_id) ? 'No Access' : 'Access'}
-                      </button>
-                    </td>
-                    <td>
-                      <button 
-                        className="manage-button" 
-                        onClick={() => handleManageApp(app)}
-                      >
-                        Manage
-                      </button>
-                    </td>
-                    <td>
-                      <button 
-                        className="delete-button" 
-                        onClick={() => handleDeleteApplication(app.app_id)}
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <button onClick={handleAddApplication} className="add-button">
+              Add Application
+            </button>
           </div>
         </div>
       )}
 
-      {userType !== 'admin' && (
-        <ul className="applications-list">
-          {filteredApplications.map((app) => (
-            <li key={app.app_id} className="application-item">
-              <div className="app-info">
-                <div className="app-header">
-                  <span className="app-icon">{getAppIcon(app.app_name)}</span>
-                  <span className="app-name">{app.app_name}</span>
-                </div>
-                {userType === 'app_admin' && (
-                  <div className="app-roles">
-                    <strong>Roles:</strong>
-                    {(app.roles || []).map((role, index) => (
-                      <span key={index} className="role-tag">
-                        {role}
-                        <button 
-                          className="remove-role"
-                          onClick={() => handleRemoveRole(app.app_id, role)}
-                        >
-                          ×
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <div className="app-actions">
-                <button 
-                  className={`access-button ${userType === 'end' && restrictedApps.includes(app.app_id) ? 'restricted' : ''}`}
-                  onClick={() => handleAccessApp(app)}
-                >
-                  {userType === 'end' && restrictedApps.includes(app.app_id) ? 'No Access' : 'Access'}
-                </button>
-                {(userType === 'admin' || userType === 'app_admin') && (
-                  <button 
-                    className="manage-button" 
-                    onClick={() => handleManageApp(app)}
-                  >
-                    Manage
-                  </button>
-                )}
-                {userType === 'admin' && (
-                  <button 
-                    className="delete-button" 
-                    onClick={() => handleDeleteApplication(app.app_id)}
-                  >
-                    Delete
-                  </button>
-                )}
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
+      <div className="search-bar">
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search applications..."
+          className="search-input"
+        />
+      </div>
 
-      {userType === 'app_admin' && (
-        <div className="app-admin-info">
-          <p>
-            As an App Admin, you can assign users to your applications and manage their roles.
-          </p>
+      {filteredApplications.length === 0 ? (
+        <div className="no-applications">
+          {userType === 'end' ? (
+            <p>No applications available. Please request access to restricted applications through the access request form.</p>
+          ) : (
+            <p>No applications found. {searchQuery && 'Try a different search term.'}</p>
+          )}
+        </div>
+      ) : (
+        <div className="applications-table-container">
+          <table className="applications-table">
+            <thead>
+              <tr>
+                <th>Icon</th>
+                <th>Application Name</th>
+                <th>Roles</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredApplications.map((app) => (
+                <tr key={app.app_id}>
+                  <td>
+                    <span className="app-icon table-icon">{getAppIcon(app.app_name)}</span>
+                  </td>
+                  <td>
+                    <span className="app-name">{app.app_name}</span>
+                  </td>
+                  <td>
+                    <div className="app-roles">
+                      {app.roles && app.roles.length > 0 ? (
+                        app.roles.map((role, index) => (
+                          <span key={index} className="role-tag">{role}</span>
+                        ))
+                      ) : (
+                        <span className="no-roles">No roles assigned</span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="app-actions">
+                    <button 
+                      className="access-button"
+                      onClick={() => handleAccessApp(app)}
+                    >
+                      Access
+                    </button>
+                    {userType !== 'end' && (
+                      <>
+                        <button 
+                          className="manage-button" 
+                          onClick={() => handleManageApp(app)}
+                        >
+                          Manage
+                        </button>
+                        <button 
+                          className="delete-button" 
+                          onClick={() => handleDeleteApplication(app.app_id)}
+                        >
+                          Delete
+                        </button>
+                      </>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 
@@ -394,7 +399,7 @@ function ApplicationList({ userType }) {
           userType={userType}
           onClose={handleCloseModal}
           onUpdate={handleAppUpdate}
-          isAdminOnly={userType === 'admin'}
+          isAdminOnly={userType === 'admin' || userType === 'super'}
         />
       )}
     </div>
