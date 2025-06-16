@@ -52,17 +52,34 @@ const api = {
   },
 
   createRole: async (role) => {
-    const response = await axios.post(`${API_BASE_URL}/roles`, role);
+    const response = await axios.post(`${API_BASE_URL}/roles`, {
+      role_name: role.role_name,
+      password: role.password
+    });
     return response.data;
   },
 
   updateRole: async (id, role) => {
-    const response = await axios.put(`${API_BASE_URL}/roles/${id}`, role);
+    const response = await axios.put(`${API_BASE_URL}/roles/${id}`, {
+      role_name: role.role_name,
+      password: role.password
+    });
     return response.data;
   },
 
   deleteRole: async (id) => {
     const response = await axios.delete(`${API_BASE_URL}/roles/${id}`);
+    return response.data;
+  },
+
+  // Role Passwords
+  getRolePassword: async (roleId) => {
+    const response = await axios.get(`${API_BASE_URL}/roles/${roleId}/password`);
+    return response.data;
+  },
+
+  updateRolePassword: async (roleId, password) => {
+    const response = await axios.put(`${API_BASE_URL}/roles/${roleId}/password`, { password });
     return response.data;
   },
 

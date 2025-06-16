@@ -202,24 +202,50 @@
 .app-roles {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-xs) 0;
+  gap: 4px;
+  padding: 4px;
+  min-height: 32px;
+  align-items: center;
 }
 
 .role-tag {
-  display: inline-block;
   background-color: var(--button-primary);
   color: white;
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border-radius: var(--border-radius-sm);
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
+  padding: 6px 12px;
+  border-radius: 15px;
+  font-size: 0.9em;
+  white-space: nowrap;
+  display: inline-block;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--button-primary);
+  transition: all 0.2s ease;
+  font-weight: 500;
+  margin: 2px;
+}
+
+.role-tag:hover {
+  background-color: var(--button-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .role-tag {
+    background-color: #0d6efd;
+    border-color: #0a58ca;
+  }
+  
+  .role-tag:hover {
+    background-color: #0a58ca;
+  }
 }
 
 .no-roles {
   color: var(--text-secondary);
   font-style: italic;
-  font-size: var(--font-size-sm);
+  font-size: 0.9em;
+  padding: 4px 8px;
 }
 
 .remove-role {
@@ -621,20 +647,22 @@
 
 .applications-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 20px;
 }
 
 .applications-table th,
 .applications-table td {
-  padding: var(--spacing-md);
+  padding: 12px;
   text-align: left;
   border-bottom: 1px solid var(--border-color);
 }
 
 .applications-table th {
-  background-color: var(--bg-tertiary);
-  font-weight: var(--font-weight-semibold);
-  color: var(--text-primary);
+  background-color: var(--header-bg);
+  font-weight: 600;
+  color: var(--text-color);
 }
 
 .applications-table tbody tr:last-child td {
@@ -661,4 +689,207 @@
   padding: var(--spacing-xs) var(--spacing-sm); /* Smaller button padding in table */
   font-size: var(--font-size-sm); /* Smaller button font size in table */
   gap: var(--spacing-xs); /* Smaller gap for icons in buttons */
+}
+
+.roles-cell {
+  min-width: 200px;
+  max-width: 300px;
+  padding: 8px;
+}
+
+.roles-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px;
+}
+
+.role-tag {
+  background-color: var(--button-primary);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 15px;
+  font-size: 0.9em;
+  white-space: nowrap;
+  display: inline-block;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--button-primary);
+  transition: all 0.2s ease;
+  font-weight: 500;
+  margin: 2px;
+}
+
+.role-tag:hover {
+  background-color: var(--button-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.role-tag .remove-role {
+  background: none;
+  border: none;
+  color: var(--text-color);
+  opacity: 0.7;
+  cursor: pointer;
+  padding: 0;
+  font-size: 1.1em;
+  line-height: 1;
+  transition: opacity 0.2s ease;
+}
+
+.role-tag .remove-role:hover {
+  opacity: 1;
+}
+
+.no-roles {
+  color: var(--text-color);
+  opacity: 0.7;
+  font-style: italic;
+  padding: 8px;
+  display: block;
+}
+
+.add-role-form {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.add-role-form input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+.add-role-form button {
+  padding: 8px 16px;
+  background-color: var(--button-bg);
+  color: var(--text-color);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.add-role-form button:hover {
+  background-color: var(--button-hover-bg);
+}
+
+.remove-role-form {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+}
+
+.remove-role-form input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+/* Update table styles to accommodate roles */
+.applications-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 20px;
+}
+
+.applications-table th,
+.applications-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.applications-table th {
+  background-color: var(--header-bg);
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+/* Ensure the roles column has enough space */
+.applications-table td:nth-child(3) {
+  min-width: 200px;
+  max-width: 300px;
+}
+
+/* Add hover effect to table rows */
+.applications-table tbody tr:hover {
+  background-color: var(--hover-bg);
+}
+
+/* Ensure the table is responsive */
+@media (max-width: 768px) {
+  .applications-table {
+    display: block;
+    overflow-x: auto;
+  }
+  
+  .roles-cell {
+    min-width: 150px;
+  }
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.access-button,
+.manage-button,
+.delete-button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.access-button {
+  background-color: #4CAF50;  /* Green color */
+  color: white;
+}
+
+.manage-button {
+  background-color: var(--button-secondary-bg);
+  color: var(--text-color);
+}
+
+.delete-button {
+  background-color: var(--error-color);
+  color: white;
+}
+
+.access-button:hover,
+.manage-button:hover,
+.delete-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.access-button:hover {
+  background-color: #45a049;  /* Darker green on hover */
+}
+
+.manage-button:hover {
+  background-color: var(--button-secondary-hover-bg);
+}
+
+.delete-button:hover {
+  background-color: var(--error-hover-color);
+}
+
+.access-button:active,
+.manage-button:active,
+.delete-button:active {
+  transform: translateY(0);
+  box-shadow: none;
 } 

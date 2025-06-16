@@ -2,14 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import '../styles/ApplicationList.css';
 import AppManagementModal from './AppManagementModal';
-
+ 
 // GitHub logo SVG component
 const GitHubLogo = () => (
   <svg height="24" viewBox="0 0 16 16" width="24" fill="currentColor">
     <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
   </svg>
 );
-
+ 
 function ApplicationList({ userType }) {
   const [applications, setApplications] = useState(() => {
     // Try to load applications from localStorage first
@@ -24,39 +24,39 @@ function ApplicationList({ userType }) {
   const [restrictedApps, setRestrictedApps] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredApplications, setFilteredApplications] = useState([]);
-
+ 
   useEffect(() => {
     fetchApplications();
   }, []);
-
+ 
   // Save applications to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem('applications', JSON.stringify(applications));
   }, [applications]);
-
+ 
   useEffect(() => {
     const lowerCaseQuery = searchQuery.toLowerCase();
     let filtered = applications;
-    
+   
     // For end users, filter out restricted applications from the main view
     if (userType === 'end') {
       filtered = applications.filter(app => !restrictedApps.includes(app.app_id));
     }
-    
+   
     // Apply search filter
     filtered = filtered.filter(app =>
       app.app_name.toLowerCase().includes(lowerCaseQuery)
     );
-    
+   
     setFilteredApplications(filtered);
   }, [applications, searchQuery, restrictedApps, userType]);
-
+ 
   const fetchApplications = async () => {
     try {
       console.log('Fetching applications...');
       const data = await api.getApplications();
       console.log('Received applications:', data);
-      
+     
       // Merge fetched data with existing data from localStorage
       const mergedData = data.map(fetchedApp => {
         const existingApp = applications.find(app => app.app_id === fetchedApp.app_id);
@@ -65,20 +65,20 @@ function ApplicationList({ userType }) {
           roles: existingApp?.roles || fetchedApp.roles || []
         };
       });
-      
+     
       setApplications(mergedData);
-
+ 
       // Set restricted apps for end users
       if (userType === 'end') {
         const restricted = mergedData.filter(app => {
           const appName = app.app_name.toLowerCase();
-          return appName.includes('hr') || 
-                 appName.includes('devops') || 
+          return appName.includes('hr') ||
+                 appName.includes('devops') ||
                  appName.includes('finance');
         });
         setRestrictedApps(restricted.map(app => app.app_id));
       }
-
+ 
       setLoading(false);
     } catch (err) {
       console.error('Error fetching applications:', err);
@@ -86,7 +86,7 @@ function ApplicationList({ userType }) {
       setLoading(false);
     }
   };
-
+ 
   const handleAddApplication = async () => {
     if (newApp.name && newApp.url) {
       try {
@@ -94,7 +94,7 @@ function ApplicationList({ userType }) {
         const roles = newApp.roles
           ? newApp.roles.split(',').map(role => role.trim()).filter(role => role)
           : [];
-
+ 
         const application = {
           app_name: newApp.name,
           app_url: newApp.url,
@@ -102,13 +102,13 @@ function ApplicationList({ userType }) {
           roles: roles,
           created_by: 2 // This should come from the logged-in user
         };
-        
+       
         const result = await api.createApplication(application);
         const newApplication = {
           ...result,
           roles: roles
         };
-        
+       
         setApplications(prevApps => [...prevApps, newApplication]);
         setNewApp({ name: '', url: '', roles: '' });
         setSuccess('Application added successfully');
@@ -121,7 +121,7 @@ function ApplicationList({ userType }) {
       setError('Please fill in all required fields');
     }
   };
-
+ 
   const handleRemoveRole = async (appId, roleToRemove) => {
     try {
       const updatedApplications = applications.map(app =>
@@ -137,13 +137,13 @@ function ApplicationList({ userType }) {
       setError(`Failed to remove role: ${err.message}`);
     }
   };
-
+ 
   const handleAccessApp = async (app) => {
     if (userType === 'end' && restrictedApps.includes(app.app_id)) {
       setError(
         <div className="access-denied-message">
           <span>Access denied. Please request access to this application.</span>
-          <button 
+          <button
             className="back-to-apps-button"
             onClick={() => setError(null)}
           >
@@ -153,7 +153,7 @@ function ApplicationList({ userType }) {
       );
       return;
     }
-
+ 
     try {
       // Check if this is the Github App (by name or URL)
       if (app.app_name.toLowerCase().includes('github') || app.app_url.includes('github.com')) {
@@ -163,7 +163,7 @@ function ApplicationList({ userType }) {
           console.error("Auto-login failed", err);
         }
       }
-
+ 
       // Open the app URL
       const formattedUrl = app.app_url.startsWith('http') ? app.app_url : `https://${app.app_url}`;
       window.open(formattedUrl, '_blank', 'noopener,noreferrer');
@@ -171,15 +171,15 @@ function ApplicationList({ userType }) {
       setError(`Failed to access application: ${err.message}`);
     }
   };
-
+ 
   const handleManageApp = (app) => {
     setSelectedApp(app);
   };
-
+ 
   const handleCloseModal = () => {
     setSelectedApp(null);
   };
-
+ 
   const handleAppUpdate = async (type, data) => {
     try {
       if (type === 'settings' && data.save) {
@@ -190,9 +190,9 @@ function ApplicationList({ userType }) {
           description: data.description || selectedApp.description,
           roles: selectedApp.roles // Preserve existing roles
         };
-
+ 
         await api.updateApplication(selectedApp.app_id, updatedApp);
-        
+       
         // Update the applications list with the new data
         const updatedApps = applications.map(app =>
           app.app_id === selectedApp.app_id
@@ -229,7 +229,7 @@ function ApplicationList({ userType }) {
       setError(`Failed to update application: ${err.message}`);
     }
   };
-
+ 
   const handleDeleteApplication = async (appId) => {
     if (window.confirm('Are you sure you want to delete this application? This action cannot be undone.')) {
       try {
@@ -243,7 +243,7 @@ function ApplicationList({ userType }) {
       }
     }
   };
-
+ 
   const getAppIcon = (appName) => {
     const name = appName.toLowerCase();
     if (name.includes('github')) return <GitHubLogo />;
@@ -267,20 +267,20 @@ function ApplicationList({ userType }) {
     if (name.includes('devops')) return '🛠️';
     return '🔗'; // Default icon
   };
-
+ 
   if (loading) return <div className="loading">Loading applications...</div>;
   if (error) return <div className="error">{error}</div>;
-
+ 
   return (
     <div className="application-list-container">
       {/* Header section with title */}
       <div className="application-header-controls">
         <h3>Applications</h3>
       </div>
-
+ 
       {success && <div className="success-message">{success}</div>}
       {error && <div className="error-message">{error}</div>}
-
+ 
       {(userType === 'admin' || userType === 'super') && (
         <div className="admin-controls">
           <div className="add-application-form">
@@ -312,7 +312,7 @@ function ApplicationList({ userType }) {
           </div>
         </div>
       )}
-
+ 
       <div className="search-bar">
         <input
           type="text"
@@ -322,7 +322,7 @@ function ApplicationList({ userType }) {
           className="search-input"
         />
       </div>
-
+ 
       {filteredApplications.length === 0 ? (
         <div className="no-applications">
           {userType === 'end' ? (
@@ -363,28 +363,32 @@ function ApplicationList({ userType }) {
                     </div>
                   </td>
                   <td className="app-actions">
-                    <button 
-                      className="access-button"
-                      onClick={() => handleAccessApp(app)}
-                    >
-                      Access
-                    </button>
-                    {userType !== 'end' && (
-                      <>
-                        <button 
-                          className="manage-button" 
-                          onClick={() => handleManageApp(app)}
-                        >
-                          Manage
-                        </button>
-                        <button 
-                          className="delete-button" 
-                          onClick={() => handleDeleteApplication(app.app_id)}
-                        >
-                          Delete
-                        </button>
-                      </>
-                    )}
+                    <div className="action-buttons">
+                      <button
+                        className="access-button"
+                        onClick={() => handleAccessApp(app)}
+                      >
+                        Access
+                      </button>
+                      {userType !== 'end' && (
+                        <>
+                          <button
+                            className="manage-button"
+                            onClick={() => handleManageApp(app)}
+                          >
+                            Manage
+                          </button>
+                          {(userType === 'super' || userType === 'admin') && (
+                            <button
+                              className="delete-button"
+                              onClick={() => handleDeleteApplication(app.app_id)}
+                            >
+                              Delete
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -392,7 +396,7 @@ function ApplicationList({ userType }) {
           </table>
         </div>
       )}
-
+ 
       {selectedApp && (
         <AppManagementModal
           app={selectedApp}
@@ -405,5 +409,5 @@ function ApplicationList({ userType }) {
     </div>
   );
 }
-
-export default ApplicationList; 
+ 
+export default ApplicationList;

@@ -6,8 +6,25 @@ const { exec } = require('child_process');
 // Get all applications
 router.get('/', async (req, res) => {
   try {
-    const [rows] = await pool.query('SELECT * FROM applications');
-    res.json(rows);
+    // Get all applications
+    const [applications] = await pool.query('SELECT * FROM applications');
+    
+    // For each application, get its roles
+    const applicationsWithRoles = await Promise.all(applications.map(async (app) => {
+      const [roles] = await pool.query(`
+        SELECT r.role_id, r.role_name 
+        FROM roles r
+        JOIN app_entitlements ae ON r.role_id = ae.role_id
+        WHERE ae.app_id = ?
+      `, [app.app_id]);
+      
+      return {
+        ...app,
+        roles: roles
+      };
+    }));
+
+    res.json(applicationsWithRoles);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

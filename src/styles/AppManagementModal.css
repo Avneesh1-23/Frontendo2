@@ -1,4 +1,4 @@
-.modal-overlay {
+.app-management-modal {
   position: fixed;
   top: 0;
   left: 0;
@@ -19,6 +19,8 @@
   max-width: 800px;
   max-height: 90vh;
   overflow-y: auto;
+  position: relative;
+  margin: auto;
 }
 
 .modal-header {

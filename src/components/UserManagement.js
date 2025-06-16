@@ -10,46 +10,51 @@ function UserManagement({ isAppAdmin, onLogout }) {
     selectedApp: '',
     selectedRole: ''
   });
-  const [applications, setApplications] = useState([]);
+  const [applications, setApplications] = useState(() => {
+    // Try to load applications from localStorage first
+    const savedApplications = localStorage.getItem('applications');
+    return savedApplications ? JSON.parse(savedApplications) : [];
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [usersData, appsData] = await Promise.all([
+          api.getUsers(),
+          api.getApplications()
+        ]);
+        
+        // Get stored roles from localStorage
+        const storedRoles = JSON.parse(localStorage.getItem('appRoles') || '{}');
+        
+        // Merge stored roles with fetched applications
+        const appsWithStoredRoles = appsData.map(app => ({
+          ...app,
+          roles: storedRoles[app.app_id] || app.roles || []
+        }));
+        
+        setUsers(usersData);
+        setApplications(appsWithStoredRoles);
+        
+        // Save to localStorage
+        localStorage.setItem('applications', JSON.stringify(appsWithStoredRoles));
+        
+        setLoading(false);
+      } catch (err) {
+        setError('Failed to fetch data');
+        setLoading(false);
+      }
+    };
     fetchData();
   }, []);
 
-  const fetchData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      // Fetch users data
-      const usersData = await api.getUsers();
-      
-      // Fetch applications data based on user type
-      let appsData = [];
-      if (isAppAdmin) {
-        appsData = await api.getAppAdminApplications();
-      } else {
-        appsData = await api.getApplications();
-      }
-
-      // Process and combine the data
-      const processedUsers = usersData.map(user => ({
-        ...user,
-        assignedApps: user.assignedApps || []
-      }));
-
-      setUsers(processedUsers);
-      setApplications(appsData);
-      setLoading(false);
-    } catch (err) {
-      console.error('Error in fetchData:', err);
-      setError('Failed to fetch data. Please try again later.');
-      setLoading(false);
-    }
-  };
+  // Save applications to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('applications', JSON.stringify(applications));
+  }, [applications]);
 
   const handleAddUser = async () => {
     if (!newUser.username.trim() || !newUser.email.trim()) {
@@ -102,7 +107,6 @@ function UserManagement({ isAppAdmin, onLogout }) {
       setSuccess('User added successfully');
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      console.error('Error creating user:', err);
       setError('Failed to add user: ' + (err.response?.data?.message || err.message));
     }
   };
@@ -147,20 +151,67 @@ function UserManagement({ isAppAdmin, onLogout }) {
 
   const handleAddRole = async (appId, roleName) => {
     try {
-      await api.createRole({
-        app_id: appId,
-        role_name: roleName
-      });
-      const updatedApps = applications.map(app =>
+      const roleData = {
+        role_name: roleName,
+        password: 'defaultPassword123',
+        app_id: appId
+      };
+      
+      await api.createRole(roleData);
+      
+      // Update roles in localStorage
+      const storedRoles = JSON.parse(localStorage.getItem('appRoles') || '{}');
+      const updatedRoles = {
+        ...storedRoles,
+        [appId]: [...(storedRoles[appId] || []), roleName]
+      };
+      localStorage.setItem('appRoles', JSON.stringify(updatedRoles));
+      
+      // Update applications state
+      const updatedApplications = applications.map(app => 
         app.app_id === appId
-          ? { ...app, roles: [...app.roles, roleName] }
+          ? { ...app, roles: [...(app.roles || []), roleName] }
           : app
       );
-      setApplications(updatedApps);
+      setApplications(updatedApplications);
+      
+      // Save to localStorage
+      localStorage.setItem('applications', JSON.stringify(updatedApplications));
+      
       setSuccess('Role added successfully');
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
       setError('Failed to add role');
+    }
+  };
+
+  const handleRemoveRole = async (appId, roleName) => {
+    try {
+      await api.deleteRole(appId, roleName);
+      
+      // Update roles in localStorage
+      const storedRoles = JSON.parse(localStorage.getItem('appRoles') || '{}');
+      const updatedRoles = {
+        ...storedRoles,
+        [appId]: (storedRoles[appId] || []).filter(role => role !== roleName)
+      };
+      localStorage.setItem('appRoles', JSON.stringify(updatedRoles));
+      
+      // Update applications state
+      const updatedApplications = applications.map(app => 
+        app.app_id === appId
+          ? { ...app, roles: (app.roles || []).filter(role => role !== roleName) }
+          : app
+      );
+      setApplications(updatedApplications);
+      
+      // Save to localStorage
+      localStorage.setItem('applications', JSON.stringify(updatedApplications));
+      
+      setSuccess('Role removed successfully');
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      setError('Failed to remove role');
     }
   };
 
@@ -210,8 +261,8 @@ function UserManagement({ isAppAdmin, onLogout }) {
                 {applications
                   .find(app => app.app_id === newUser.selectedApp)?.roles
                   .map(role => (
-                    <option key={role} value={role}>
-                      {role}
+                    <option key={typeof role === 'object' ? role.role_id : role} value={typeof role === 'object' ? role.role_name : role}>
+                      {typeof role === 'object' ? role.role_name : role}
                     </option>
                   ))}
               </select>
@@ -294,8 +345,8 @@ function UserManagement({ isAppAdmin, onLogout }) {
                           {applications
                             .find(app => app.app_id === user.selectedApp)?.roles
                             .map(role => (
-                              <option key={role} value={role}>
-                                {role}
+                              <option key={typeof role === 'object' ? role.role_id : role} value={typeof role === 'object' ? role.role_name : role}>
+                                {typeof role === 'object' ? role.role_name : role}
                               </option>
                             ))}
                         </select>
@@ -336,6 +387,18 @@ function UserManagement({ isAppAdmin, onLogout }) {
                   {(app.roles || []).map((role, index) => (
                     <span key={index} className="role-tag">{role}</span>
                   ))}
+                </div>
+                <div className="remove-role-form">
+                  <input
+                    type="text"
+                    placeholder="Role to remove"
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        handleRemoveRole(app.app_id, e.target.value);
+                        e.target.value = '';
+                      }
+                    }}
+                  />
                 </div>
               </div>
             ))}

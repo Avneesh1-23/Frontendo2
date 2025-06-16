@@ -6,12 +6,13 @@ function AppManagementModal({ app, userType, onClose, onUpdate, isAdminOnly }) {
   const [newRole, setNewRole] = useState('');
   const [selectedUser, setSelectedUser] = useState('');
   const [selectedRole, setSelectedRole] = useState('');
-  const [selectedOperation, setSelectedOperation] = useState('');
+  const [rolePassword, setRolePassword] = useState('');
   const [settings, setSettings] = useState({
     name: app.app_name,
     url: app.app_url,
     description: app.description || ''
   });
+  const [error, setError] = useState('');
 
   // Get end users from localStorage
   const [endUsers, setEndUsers] = useState([]);
@@ -33,10 +34,22 @@ function AppManagementModal({ app, userType, onClose, onUpdate, isAdminOnly }) {
   );
 
   const handleAddRole = () => {
-    if (newRole.trim()) {
-      onUpdate('role', { action: 'add', role: newRole });
-      setNewRole('');
+    if (!newRole.trim()) {
+      setError('Role name is required');
+      return;
     }
+    if (!rolePassword.trim()) {
+      setError('Role password is required');
+      return;
+    }
+    
+    onUpdate('role', { 
+      action: 'add', 
+      role: newRole.trim(),
+      password: rolePassword.trim()
+    });
+    setNewRole('');
+    setRolePassword('');
   };
 
   const handleRemoveRole = (role) => {
@@ -44,7 +57,7 @@ function AppManagementModal({ app, userType, onClose, onUpdate, isAdminOnly }) {
   };
 
   const handleAssignUser = () => {
-    if (selectedUser && selectedRole && selectedOperation) {
+    if (selectedUser && selectedRole) {
       // Find the user to assign
       const userToAssign = endUsers.find(user => user.user_id === parseInt(selectedUser));
       if (!userToAssign) return;
@@ -54,8 +67,7 @@ function AppManagementModal({ app, userType, onClose, onUpdate, isAdminOnly }) {
         app_id: app.app_id,
         app_name: app.app_name,
         role_id: selectedRole,
-        role_name: selectedRole,
-        operation: selectedOperation
+        role_name: selectedRole
       };
 
       // Update user's assignments
@@ -77,14 +89,12 @@ function AppManagementModal({ app, userType, onClose, onUpdate, isAdminOnly }) {
       onUpdate('user', { 
         action: 'assign', 
         user: selectedUser, 
-        role: selectedRole,
-        operation: selectedOperation
+        role: selectedRole
       });
 
       // Reset form
       setSelectedUser('');
       setSelectedRole('');
-      setSelectedOperation('');
     }
   };
 
@@ -132,13 +142,15 @@ function AppManagementModal({ app, userType, onClose, onUpdate, isAdminOnly }) {
   };
 
   return (
-    <div className="modal-overlay">
+    <div className="app-management-modal">
       <div className="modal-content">
         <div className="modal-header">
-          <h3>Manage {app.app_name}</h3>
-          <button className="close-button" onClick={onClose}>×</button>
+          <h3>{app.app_name}</h3>
+          <button onClick={onClose} className="close-button">&times;</button>
         </div>
-
+        
+        {error && <div className="error-message">{error}</div>}
+        
         <div className="modal-tabs">
           {!isAdminOnly && (
             <>
@@ -206,15 +218,21 @@ function AppManagementModal({ app, userType, onClose, onUpdate, isAdminOnly }) {
                   onChange={(e) => setNewRole(e.target.value)}
                   placeholder="Enter new role name"
                 />
+                <input
+                  type="password"
+                  value={rolePassword}
+                  onChange={(e) => setRolePassword(e.target.value)}
+                  placeholder="Enter role password"
+                />
                 <button onClick={handleAddRole}>Add Role</button>
               </div>
               <div className="roles-list">
                 {app.roles?.map((role, index) => (
                   <div key={index} className="role-item">
-                    <span>{role}</span>
+                    <span>{typeof role === 'object' ? role.role_name : role}</span>
                     <button 
                       className="remove-role"
-                      onClick={() => handleRemoveRole(role)}
+                      onClick={() => handleRemoveRole(typeof role === 'object' ? role.role_name : role)}
                     >
                       ×
                     </button>
@@ -245,17 +263,10 @@ function AppManagementModal({ app, userType, onClose, onUpdate, isAdminOnly }) {
                 >
                   <option value="">Select Role</option>
                   {app.roles?.map((role, index) => (
-                    <option key={index} value={role}>{role}</option>
+                    <option key={index} value={typeof role === 'object' ? role.role_name : role}>
+                      {typeof role === 'object' ? role.role_name : role}
+                    </option>
                   ))}
-                </select>
-                <select
-                  value={selectedOperation}
-                  onChange={(e) => setSelectedOperation(e.target.value)}
-                >
-                  <option value="">Select Operation</option>
-                  <option value="viewer">Viewer</option>
-                  <option value="editor">Editor</option>
-                  <option value="manager">Manager</option>
                 </select>
                 <button onClick={handleAssignUser}>Assign User</button>
               </div>
@@ -267,7 +278,6 @@ function AppManagementModal({ app, userType, onClose, onUpdate, isAdminOnly }) {
                       <th>Username</th>
                       <th>Email</th>
                       <th>Role</th>
-                      <th>Operation</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -280,9 +290,6 @@ function AppManagementModal({ app, userType, onClose, onUpdate, isAdminOnly }) {
                           <td>{user.email}</td>
                           <td>
                             <span className="role-badge">{assignment?.role_name || 'Not Set'}</span>
-                          </td>
-                          <td>
-                            <span className="operation-badge">{assignment?.operation || 'Not Set'}</span>
                           </td>
                           <td>
                             <button

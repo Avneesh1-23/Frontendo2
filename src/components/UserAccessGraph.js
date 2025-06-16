@@ -1,12 +1,12 @@
 import {
-  CategoryScale,
-  Chart as ChartJS,
-  Legend,
-  LinearScale,
-  LineElement,
-  PointElement,
-  Title,
-  Tooltip,
+    CategoryScale,
+    Chart as ChartJS,
+    Legend,
+    LinearScale,
+    LineElement,
+    PointElement,
+    Title,
+    Tooltip,
 } from 'chart.js';
 import React, { useEffect, useState } from 'react';
 import { Line } from 'react-chartjs-2';
@@ -89,7 +89,7 @@ function UserAccessGraph() {
             const user = accessData[context.dataIndex];
             return [
               `User: ${user.user}`,
-              `Last Access: ${date.toLocaleString()}`,
+              `Last Access: ${date.toLocaleString('en-US', { timeZone: 'UTC' })}`,
               `Application: ${user.app}`
             ];
           },

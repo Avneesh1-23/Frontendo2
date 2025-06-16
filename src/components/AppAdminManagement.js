@@ -9,6 +9,8 @@ function AppAdminManagement({ onLogout }) {
     email: '',
     selectedApps: []
   });
+  const [appSearchTerm, setAppSearchTerm] = useState('');
+  const [showAppDropdown, setShowAppDropdown] = useState(false);
   // Initialize with data from localStorage or default data
   const [appAdmins, setAppAdmins] = useState(() => {
     const savedAdmins = localStorage.getItem('appAdmins');
@@ -38,9 +40,9 @@ function AppAdminManagement({ onLogout }) {
       }
     ];
   });
-  const [loadingAppAdmins, setLoadingAppAdmins] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Save appAdmins to localStorage whenever they change
   useEffect(() => {
@@ -90,7 +92,6 @@ function AppAdminManagement({ onLogout }) {
       setNewAdmin({ username: '', email: '', selectedApps: [] });
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      console.error('Error adding app admin:', err);
       setError('Failed to add app admin');
       setTimeout(() => setError(null), 3000);
     }
@@ -108,17 +109,25 @@ function AppAdminManagement({ onLogout }) {
     }
   };
 
+  // Filter applications based on search term
+  const filteredApplications = applications.filter(app =>
+    app.app_name.toLowerCase().includes(appSearchTerm.toLowerCase())
+  );
+
   const handleAppSelection = (appId) => {
-    setNewAdmin(prev => {
-      const isSelected = prev.selectedApps.includes(appId);
-      return {
-        ...prev,
-        selectedApps: isSelected
-          ? prev.selectedApps.filter(id => id !== appId)
-          : [...prev.selectedApps, appId]
-      };
-    });
+    setNewAdmin(prev => ({
+      ...prev,
+      selectedApps: prev.selectedApps.includes(appId)
+        ? prev.selectedApps.filter(id => id !== appId)
+        : [...prev.selectedApps, appId]
+    }));
   };
+
+  const filteredAppAdmins = appAdmins.filter(admin =>
+    admin.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    admin.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    admin.applications.some(app => app.app_name.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
   return (
     <div className="app-admin-management">
@@ -150,18 +159,72 @@ function AppAdminManagement({ onLogout }) {
           </div>
           <div className="form-group">
             <label className="applications-label">Select Applications:</label>
-            <div className="applications-grid">
-              {applications.map(app => (
-                <div key={app.app_id} className="application-checkbox">
-                  <input
-                    type="checkbox"
-                    id={`app-${app.app_id}`}
-                    checked={newAdmin.selectedApps.includes(app.app_id)}
-                    onChange={() => handleAppSelection(app.app_id)}
-                  />
-                  <label htmlFor={`app-${app.app_id}`}>{app.app_name}</label>
+            <div className="custom-multi-select">
+              <div 
+                className={`select-header ${showAppDropdown ? 'active' : ''}`}
+                onClick={() => setShowAppDropdown(!showAppDropdown)}
+              >
+                <div className="selected-apps-text">
+                  {newAdmin.selectedApps.length > 0 
+                    ? filteredApplications
+                        .filter(app => newAdmin.selectedApps.includes(app.app_id))
+                        .map(app => app.app_name)
+                        .join(', ')
+                    : 'Select applications'}
                 </div>
-              ))}
+                <span className="dropdown-arrow">▼</span>
+              </div>
+              {showAppDropdown && (
+                <div className="select-dropdown">
+                  <div className="search-container">
+                    <input
+                      type="text"
+                      value={appSearchTerm}
+                      onChange={(e) => setAppSearchTerm(e.target.value)}
+                      placeholder="Search applications..."
+                      className="search-input"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                  <div className="options-container">
+                    {filteredApplications.length > 0 ? (
+                      filteredApplications.map((app) => (
+                        <div
+                          key={app.app_id}
+                          className="option-item"
+                          onClick={() => {
+                            const newSelectedApps = newAdmin.selectedApps.includes(app.app_id)
+                              ? newAdmin.selectedApps.filter(id => id !== app.app_id)
+                              : [...newAdmin.selectedApps, app.app_id];
+                            setNewAdmin(prev => ({
+                              ...prev,
+                              selectedApps: newSelectedApps
+                            }));
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={newAdmin.selectedApps.includes(app.app_id)}
+                            onChange={(e) => {
+                              e.stopPropagation();
+                              const newSelectedApps = e.target.checked
+                                ? [...newAdmin.selectedApps, app.app_id]
+                                : newAdmin.selectedApps.filter(id => id !== app.app_id);
+                              setNewAdmin(prev => ({
+                                ...prev,
+                                selectedApps: newSelectedApps
+                              }));
+                            }}
+                          />
+                          <span>{app.app_name}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="no-options">No applications found</div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           <button type="submit" className="add-button">Add App Admin</button>
@@ -170,6 +233,13 @@ function AppAdminManagement({ onLogout }) {
 
       <div className="app-admins-list-container">
         <h3>App Admins List</h3>
+        <input
+          type="text"
+          placeholder="Search app admins by username, email, or application..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="input-field search-input"
+        />
         <div className="app-admins-table-container">
           <table className="app-admins-table">
             <thead>
@@ -182,7 +252,7 @@ function AppAdminManagement({ onLogout }) {
               </tr>
             </thead>
             <tbody>
-              {appAdmins.map((admin) => (
+              {filteredAppAdmins.map((admin) => (
                 <tr key={admin.user_id}>
                   <td>{admin.username}</td>
                   <td>{admin.email}</td>
@@ -195,7 +265,7 @@ function AppAdminManagement({ onLogout }) {
                       ))}
                     </div>
                   </td>
-                  <td>{new Date(admin.created_at).toLocaleString()}</td>
+                  <td>{new Date(admin.created_at).toLocaleString('en-US', { timeZone: 'UTC' })}</td>
                   <td>
                     <button
                       className="delete-button"

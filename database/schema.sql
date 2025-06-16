@@ -21,6 +21,17 @@ CREATE TABLE roles (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Role Passwords table
+CREATE TABLE role_passwords (
+    role_id INT PRIMARY KEY,
+    password_hash VARCHAR(255) NOT NULL,
+    created_by INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (role_id) REFERENCES roles(role_id) ON DELETE CASCADE,
+    FOREIGN KEY (created_by) REFERENCES users(user_id)
+);
+
 -- User-Roles mapping table
 CREATE TABLE user_roles (
     user_id INT,

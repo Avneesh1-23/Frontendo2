@@ -16,7 +16,7 @@ function AuditLog() {
     { user: 'Ivy Martinez', app: 'Finance Portal', action: 'Modified', timestamp: '2024-03-15 18:00:00', details: 'Updated budget allocation' }
   ];
 
-  const [auditLogs, setAuditLogs] = useState(dummyAuditLogs);
+  const [auditLogs] = useState(dummyAuditLogs);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortConfig, setSortConfig] = useState({
     key: 'timestamp',
@@ -35,7 +35,6 @@ function AuditLog() {
       // setAuditLogs(data);
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching audit logs:', error);
       setLoading(false);
     }
   };
@@ -119,7 +118,7 @@ function AuditLog() {
                   Details {getSortIcon('details')}
                 </th>
                 <th onClick={() => handleSort('timestamp')} className="sortable">
-                  Timestamp {getSortIcon('timestamp')}
+                  Timestamp (UTC) {getSortIcon('timestamp')}
                 </th>
               </tr>
             </thead>
@@ -134,7 +133,7 @@ function AuditLog() {
                     </span>
                   </td>
                   <td>{log.details}</td>
-                  <td>{new Date(log.timestamp).toLocaleString()}</td>
+                  <td>{new Date(log.timestamp).toLocaleString('en-US', { timeZone: 'UTC' })} UTC</td>
                 </tr>
               ))}
             </tbody>

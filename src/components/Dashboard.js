@@ -21,7 +21,7 @@ function Dashboard({ userType, onLogout, theme, onThemeToggle }) {
   const [activeTab, setActiveTab] = useState(() => {
     switch (userType) {
       case 'super':
-        return 'new-application';
+        return 'system-overview';
       case 'admin':
         return 'new-application';
       case 'app_admin':
@@ -120,8 +120,7 @@ function Dashboard({ userType, onLogout, theme, onThemeToggle }) {
       case 'applications':
         return (
           <ApplicationList 
-            applications={applications}
-            userType={userType}
+            userType={userType === 'super' ? 'app_admin' : userType}
           />
         );
       case 'access-requests':
@@ -231,7 +230,7 @@ function Dashboard({ userType, onLogout, theme, onThemeToggle }) {
                             {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
                           </span>
                         </td>
-                        <td>{new Date(request.requested_at).toLocaleString()}</td>
+                        <td>{new Date(request.requested_at).toLocaleString('en-US', { timeZone: 'UTC' })}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -245,6 +244,18 @@ function Dashboard({ userType, onLogout, theme, onThemeToggle }) {
       {userType === 'super' && (
         <>
           <div className="dashboard-tabs">
+            <button 
+              className={`tab-button ${activeTab === 'system-overview' ? 'active' : ''}`}
+              onClick={() => setActiveTab('system-overview')}
+            >
+              System Overview
+            </button>
+            <button 
+              className={`tab-button ${activeTab === 'end-users' ? 'active' : ''}`}
+              onClick={() => setActiveTab('end-users')}
+            >
+              End User Management
+            </button>
             <button 
               className={`tab-button ${activeTab === 'new-application' ? 'active' : ''}`}
               onClick={() => setActiveTab('new-application')}
@@ -262,18 +273,6 @@ function Dashboard({ userType, onLogout, theme, onThemeToggle }) {
               onClick={() => setActiveTab('applications')}
             >
               Applications
-            </button>
-            <button 
-              className={`tab-button ${activeTab === 'end-users' ? 'active' : ''}`}
-              onClick={() => setActiveTab('end-users')}
-            >
-              End User Management
-            </button>
-            <button 
-              className={`tab-button ${activeTab === 'system-overview' ? 'active' : ''}`}
-              onClick={() => setActiveTab('system-overview')}
-            >
-              System Overview
             </button>
           </div>
           <div className="tab-content">

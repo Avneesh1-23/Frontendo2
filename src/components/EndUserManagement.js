@@ -9,8 +9,7 @@ function EndUserManagement() {
     email: '',
     password: '',
     selectedApp: '',
-    selectedRole: '',
-    selectedOperation: ''
+    selectedRole: ''
   });
   // Initialize with dummy data
   const [endUsers, setEndUsers] = useState([
@@ -52,7 +51,7 @@ function EndUserManagement() {
 
   const handleAddUser = async (e) => {
     e.preventDefault();
-    if (!newUser.username || !newUser.email || !newUser.password || !newUser.selectedApp || !newUser.selectedOperation) {
+    if (!newUser.username || !newUser.email || !newUser.password || !newUser.selectedApp ) {
       setError('Please fill in all required fields');
       return;
     }
@@ -77,8 +76,7 @@ function EndUserManagement() {
             app_id: selectedApp.app_id,
             app_name: selectedApp.app_name,
             role_id: null,
-            role_name: newUser.selectedRole,
-            operation: newUser.selectedOperation
+            role_name: newUser.selectedRole
           }
         ],
         created_at: new Date().toISOString()
@@ -97,8 +95,7 @@ function EndUserManagement() {
         email: '', 
         password: '', 
         selectedApp: '', 
-        selectedRole: '', 
-        selectedOperation: '' 
+        selectedRole: '' 
       });
       setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
@@ -200,18 +197,6 @@ function EndUserManagement() {
               ))}
             </select>
           </div>
-          <div className="form-group">
-            <select
-              value={newUser.selectedOperation}
-              onChange={(e) => setNewUser({ ...newUser, selectedOperation: e.target.value })}
-              className="select-field"
-            >
-              <option value="">Select Operation</option>
-              <option value="viewer">Viewer</option>
-              <option value="editor">Editor</option>
-              <option value="manager">Manager</option>
-            </select>
-          </div>
           <button type="submit" className="add-button">Add End User</button>
         </form>
       </div>
@@ -242,14 +227,11 @@ function EndUserManagement() {
                           {assignment.role_name && (
                             <span className="role-badge">{assignment.role_name}</span>
                           )}
-                          {assignment.operation && (
-                            <span className="operation-badge">{assignment.operation}</span>
-                          )}
                         </div>
                       ))}
                     </div>
                   </td>
-                  <td>{new Date(user.created_at).toLocaleString()}</td>
+                  <td>{new Date(user.created_at).toLocaleString('en-US', { timeZone: 'UTC' })}</td>
                   <td>
                     <button
                       className="delete-button"
